@@ -67,14 +67,15 @@ export const create = mutation({
     const normalizedTitle = args.title.trim().toLowerCase();
 
     // DEDUPLICATION CHECK
-    const existing = await ctx.db
+    const existingActive = await ctx.db
       .query("habits")
       .withIndex("by_user_title", (q) =>
         q.eq("userId", user.userId).eq("normalizedTitle", normalizedTitle),
       )
+      .filter((q) => q.eq(q.field("isArchived"), false))
       .first();
 
-    if (existing && !existing.isArchived) {
+    if (existingActive) {
       throw new ConvexError(
         `Duplicate habit: "${args.title}" is already an active habit.`,
       );
@@ -153,9 +154,10 @@ export const updateWithVersionCheck = mutation({
         .withIndex("by_user_title", (q) =>
           q.eq("userId", user.userId).eq("normalizedTitle", normalizedTitle),
         )
+        .filter((q) => q.eq(q.field("isArchived"), false))
         .first();
 
-      if (duplicate && duplicate._id !== habit._id && !duplicate.isArchived) {
+      if (duplicate && duplicate._id !== habit._id) {
         throw new ConvexError(`Habit name "${args.title}" already taken.`);
       }
     }
@@ -248,5 +250,30 @@ export const internalResetHabitFlags = internalMutation({
     console.log(
       `[CRON RUN] Checking logs integrity for habit: ${args.habitId}`,
     );
+  },
+});
+
+// Add this inside convex/habits/index.ts
+
+export const remove = mutation({
+  args: {
+    sessionToken: v.string(),
+    habitId: v.id("habits"),
+  },
+  handler: async (ctx, args) => {
+    const user = await authenticate(ctx, args.sessionToken);
+
+    const habit = await ctx.db.get(args.habitId);
+    if (!habit || habit.userId !== user.userId) {
+      throw new ConvexError("Habit not found or unauthorized");
+    }
+
+    // Soft delete so active list & dedup index remain clean
+    await ctx.db.patch(habit._id, {
+      isArchived: true,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true, title: habit.title };
   },
 });

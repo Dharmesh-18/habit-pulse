@@ -1,75 +1,104 @@
-# React + TypeScript + Vite
+# ⚡ Habit Pulse
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-grade, reactive habit tracking application built with **Convex** (Backend-as-a-Service) and **React (TypeScript)**. Styled with a custom tactile **Neumorphic design system** using Tailwind CSS.
 
-Currently, two official plugins are available:
+This project demonstrates core backend primitives: optimistic concurrency control (OCC), real-time WebSocket subscriptions, deduplication, sliding-window rate limiting, scheduled actions, crons, and file storage.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🚀 Key Features & Convex Concepts Demonstrated
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Real-time Reactive Data (`useQuery`):**
+   * Live UI sync via WebSockets without manual polling or cache refetching.
+   * Multi-tab instant state updates.
 
-## Expanding the ESLint configuration
+2. **Optimistic Concurrency Control (OCC) & Versioning:**
+   * Atomically versioned updates (`v.number()`).
+   * Explicit check against stale edits (`doc.version !== expectedVersion`) with a simulated multi-tab conflict tester.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. **Backend Deduplication & Indexing:**
+   * Compound index-backed uniqueness check (`by_user_title`) to prevent duplicate active habit titles.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+4. **Sliding-Window Rate Limiter:**
+   * Database-backed rolling window timestamp limiter (`rateLimits` table) guarding auth attempts and mutation spamming.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+5. **Actions & Schedulers:**
+   * `ctx.scheduler.runAt`: Precise epoch timestamp scheduling that adjusts for client timezone offsets to deliver reminders.
+   * `internalAction`: Non-deterministic runtime simulating push notifications and external webhooks.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+6. **Cron Jobs (`crons.ts`):**
+   * Recurring daily midnight audit triggers via `internalMutation`.
 
+7. **Convex File Storage:**
+   * Direct binary image uploads using one-time signed URLs (`generateUploadUrl`).
+   * Public CDN image serving via reactive `getImageUrl` for user avatars and custom habit assets.
+
+8. **Neumorphic UI & UX:**
+   * Lightweight custom component kit (`NeuCard`, `NeuButton`, `NeuInput`, `NeuCategorySelect`, `UserAvatar`).
+   * 30-day GitHub-style mini activity heatmap grid.
+   * Toast notification system parsing structured `ConvexError` objects.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons
+* **Backend:** Convex (`convex/server`, `convex/values`)
+* **State & Sync:** Convex React Client (`ConvexProvider`)
+
+---
+
+## 📁 Project Architecture
+
+```text
+habit-pulse/
+├── convex/
+│   ├── auth/              # Auth mutations, session store & profile logic
+│   ├── common/            # Rate limiting, OCC helpers & auth guards
+│   ├── habits/            # Habit queries, OCC mutations & dedup logic
+│   ├── jobs/              # Schedulers, actions & notification handlers
+│   ├── storage/           # Signed URL generation & asset handlers
+│   ├── crons.ts           # Recurring midnight jobs
+│   └── schema.ts          # Central typed schema & compound indexes
+├── src/
+│   ├── components/
+│   │   ├── habit/         # HabitCard, HeatmapGrid
+│   │   ├── profile/       # ProfileView
+│   │   └── ui/            # Neumorphic Kit (Button, Card, Input, Avatar)
+│   ├── context/           # ToastContext & auto-dismiss popover state
+│   ├── lib/               # Error parser, categories & date helpers
+│   ├── App.tsx            # Main layout & dashboard navigation
+│   └── main.tsx           # React root & ConvexProvider setup
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## ⚙️ Getting Started
+- Node.js: >=20.19.0 (Recommended: v22.x)
+- npm: >=10.x
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+1. Installation
+Clone the repository and install dependencies:
 ```
+git clone <YOUR_REPO_URL>
+cd habit-pulse
+npm install
+```
+
+2. Configure Convex
+Initialize your Convex backend deployment (generates .env.local and convex/_generated/ types):
+```
+npx convex dev
+```
+
+3. Run Development Server
+In a separate terminal window, start the Vite development server:
+```
+npm run dev
+```
+
+## 🧪 Testing Edge Cases
+- OCC Conflict Simulation: Open a habit card, click Edit, and select Test Conflict (Stale Version) to verify server-side rollback and error parsing.
+
+- Reactive Sync: Open the application in two side-by-side browser tabs. Toggle a habit completion in one tab to view instantaneous updates in the other without refreshing.
+
+- Rate Limiter: Submit the login or registration form repeatedly to trigger the sliding-window block.
