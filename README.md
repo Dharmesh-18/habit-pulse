@@ -6,6 +6,12 @@ This project demonstrates core backend primitives: optimistic concurrency contro
 
 ---
 
+## Screenshots
+
+![Login Preview](./assets/login.png)
+
+![Dashboard Preview](./assets/dashboard.png)
+
 ## 🚀 Key Features & Convex Concepts Demonstrated
 
 1. **Real-time Reactive Data (`useQuery`):**
