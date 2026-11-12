@@ -7,12 +7,12 @@ import { NeuButton } from "./components/ui/NeuButton";
 import { NeuInput } from "./components/ui/NeuInput";
 import { NeuCategorySelect } from "./components/ui/NeuCategorySelect";
 import { UserAvatar } from "./components/ui/UserAvatar";
-import { HabitCard } from "./components/habit/HabitCard";
 import { ProfileView } from "./components/profile/ProfileView";
 import { PlusCircle, LogOut, Flame, ImagePlus } from "lucide-react";
 import { useToast } from "./context/ToastContext";
 import { parseConvexError } from "./lib/errorUtils";
 import type { Id } from "../convex/_generated/dataModel";
+import { HabitMatrix } from "./components/habit/HabitMatrix";
 
 export function App() {
   const toast = useToast();
@@ -321,7 +321,7 @@ export function App() {
             </form>
           </NeuCard>
 
-          {/* Habit Cards Stream */}
+          {/* Habit Matrix Table View */}
           <main className="flex flex-col gap-4">
             {habits === undefined ? (
               <p className="text-xs text-neu-muted text-center py-8">
@@ -335,45 +335,50 @@ export function App() {
                 No habits yet. Add your first habit above to begin tracking.
               </NeuCard>
             ) : (
-              habits.map((habit) => (
-                <HabitCard
-                  key={habit._id}
-                  habit={habit as any}
-                  onToggleToday={async (id, date) => {
-                    try {
-                      const done = await toggleTodayMutation({
-                        sessionToken: token,
-                        habitId: id as any,
-                        date,
-                      });
-                      toast.info(
-                        done
-                          ? `Completed: "${habit.title}"`
-                          : `Unmarked: "${habit.title}"`,
-                      );
-                    } catch (err: unknown) {
-                      toast.error(parseConvexError(err));
+              <HabitMatrix
+                habits={habits as any}
+                onToggleDate={async (id, date) => {
+                  try {
+                    const done = await toggleTodayMutation({
+                      sessionToken: token,
+                      habitId: id as any,
+                      date,
+                    });
+                    const targetHabit = habits.find((h) => h._id === id);
+                    // toast.success(
+                    //   done
+                    //     ? `Marked "${targetHabit?.title}" done (${date})`
+                    //     : `Unmarked "${targetHabit?.title}" (${date})`,
+                    // );
+
+                    if(done) {
+                      toast.success(`Marked "${targetHabit?.title}" done (${date})`);
+                    } else {
+                      toast.error(`Unmarked "${targetHabit?.title}" (${date})`);
                     }
-                  }}
-                  onUpdate={async (id, title, cat, expVersion) => {
-                    await updateHabitMutation({
-                      sessionToken: token,
-                      habitId: id as any,
-                      title,
-                      category: cat,
-                      expectedVersion: expVersion,
-                    });
-                    toast.success(`Updated "${title}"`);
-                  }}
-                  onDelete={async (id) => {
-                    await deleteHabitMutation({
-                      sessionToken: token,
-                      habitId: id as any,
-                    });
-                    toast.success(`Habit "${habit.title}" deleted`);
-                  }}
-                />
-              ))
+                  } catch (err: unknown) {
+                    toast.error(parseConvexError(err));
+                  }
+                }}
+                onUpdate={async (id, title, cat, expVersion) => {
+                  await updateHabitMutation({
+                    sessionToken: token,
+                    habitId: id as any,
+                    title,
+                    category: cat,
+                    expectedVersion: expVersion,
+                  });
+                  toast.success(`Updated "${title}"`);
+                }}
+                onDelete={async (id) => {
+                  const targetHabit = habits.find((h) => h._id === id);
+                  await deleteHabitMutation({
+                    sessionToken: token,
+                    habitId: id as any,
+                  });
+                  toast.success(`Habit "${targetHabit?.title}" deleted`);
+                }}
+              />
             )}
           </main>
         </>
