@@ -1,5 +1,6 @@
 // src/components/ui/NeuModal.tsx
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -18,7 +19,6 @@ export const NeuModal: React.FC<NeuModalProps> = ({
   children,
   className,
 }) => {
-  // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -30,15 +30,19 @@ export const NeuModal: React.FC<NeuModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: "var(--theme-surface-elevated)",
+          borderColor: "var(--theme-border)",
+        }}
         className={cn(
-          "w-full max-w-md rounded-3xl bg-neu-bg p-6 shadow-neu-flat border border-white/60 flex flex-col gap-5 animate-in zoom-in-95 duration-150",
+          "w-full max-w-md rounded-3xl p-6 shadow-neu-flat border flex flex-col gap-5 animate-in zoom-in-95 duration-150 backdrop-blur-xl",
           className
         )}
       >
@@ -59,6 +63,7 @@ export const NeuModal: React.FC<NeuModalProps> = ({
         {/* Content */}
         <div>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
