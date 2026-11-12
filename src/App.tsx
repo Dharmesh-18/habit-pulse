@@ -13,6 +13,7 @@ import { useToast } from "./context/ToastContext";
 import { parseConvexError } from "./lib/errorUtils";
 import type { Id } from "../convex/_generated/dataModel";
 import { HabitMatrix } from "./components/habit/HabitMatrix";
+import { NeuThemeSelect } from "./components/ui/NeuThemeSelect";
 
 export function App() {
   const toast = useToast();
@@ -214,6 +215,9 @@ export function App() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Theme Dropdown (Left of Profile Avatar) */}
+          <NeuThemeSelect />
+
           {/* Tactile Profile Avatar Button */}
           <UserAvatar
             name={currentUser.name}
@@ -250,10 +254,11 @@ export function App() {
       ) : (
         <>
           {/* Add Habit Bar */}
-          <NeuCard>
+          <NeuCard className="relative z-20 overflow-visible">
             <form onSubmit={handleCreateHabit} className="flex flex-col gap-4">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                <div className="md:col-span-5">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
+                {/* Habit Name: 4 cols */}
+                <div className="md:col-span-4">
                   <NeuInput
                     label="New Habit Name"
                     placeholder="e.g. 50 Weighted Pullups"
@@ -262,13 +267,14 @@ export function App() {
                     required
                   />
                 </div>
+
+                {/* Category Dropdown: 3 cols */}
                 <div className="md:col-span-3">
-                  <NeuCategorySelect
-                    value={category}
-                    onChange={(cat) => setCategory(cat)}
-                  />
+                  <NeuCategorySelect value={category} onChange={setCategory} />
                 </div>
-                <div className="md:col-span-2">
+
+                {/* Reminder Time: 3 cols (plenty of room for HH:MM AM/PM + icon) */}
+                <div className="md:col-span-3">
                   <NeuInput
                     label="Reminder"
                     type="time"
@@ -276,6 +282,8 @@ export function App() {
                     onChange={(e) => setReminderTime(e.target.value)}
                   />
                 </div>
+
+                {/* Submit Action: 2 cols */}
                 <div className="md:col-span-2">
                   <NeuButton
                     type="submit"
@@ -283,46 +291,50 @@ export function App() {
                     disabled={isUploading}
                     className="flex items-center justify-center gap-1.5 w-full h-[42px]"
                   >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>{isUploading ? "Uploading..." : "Add"}</span>
+                    <PlusCircle className="w-4 h-4 shrink-0" />
+                    <span>{isUploading ? "Saving..." : "Add"}</span>
                   </NeuButton>
                 </div>
               </div>
 
-              {/* Habit attachment */}
-              <div className="flex items-center gap-3 pt-1 border-t border-black/5 text-xs text-neu-muted">
-                <label className="flex items-center gap-1.5 cursor-pointer hover:text-neu-dark font-medium px-2 py-1 rounded-lg shadow-neu-flat-sm active:shadow-neu-pressed transition-all">
-                  <ImagePlus className="w-3.5 h-3.5 text-neu-accent" />
-                  <span>
-                    {selectedFile
-                      ? selectedFile.name
-                      : "Attach icon / image (Convex Storage)"}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.[0])
-                        setSelectedFile(e.target.files[0]);
-                    }}
-                  />
-                </label>
-                {selectedFile && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFile(null)}
-                    className="text-[11px] text-neu-danger hover:underline"
-                  >
-                    Remove
-                  </button>
-                )}
+              {/* Habit Attachment Bar */}
+              <div className="flex items-center justify-between pt-2 border-t border-black/5 text-xs text-neu-muted">
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 cursor-pointer hover:text-neu-dark font-medium px-2.5 py-1.5 rounded-xl bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed transition-all">
+                    <ImagePlus className="w-3.5 h-3.5 text-neu-accent shrink-0" />
+                    <span className="truncate max-w-[240px]">
+                      {selectedFile
+                        ? selectedFile.name
+                        : "Attach icon / image (Optional)"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) setSelectedFile(file);
+                        e.target.value = ""; // Allows re-selecting the same file later
+                      }}
+                    />
+                  </label>
+
+                  {selectedFile && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFile(null)}
+                      className="text-[11px] font-medium text-neu-danger hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           </NeuCard>
 
           {/* Habit Matrix Table View */}
-          <main className="flex flex-col gap-4">
+          <main className="flex flex-col gap-4 relative z-10">
             {habits === undefined ? (
               <p className="text-xs text-neu-muted text-center py-8">
                 Syncing with Convex backend...
@@ -351,8 +363,10 @@ export function App() {
                     //     : `Unmarked "${targetHabit?.title}" (${date})`,
                     // );
 
-                    if(done) {
-                      toast.success(`Marked "${targetHabit?.title}" done (${date})`);
+                    if (done) {
+                      toast.success(
+                        `Marked "${targetHabit?.title}" done (${date})`,
+                      );
                     } else {
                       toast.error(`Unmarked "${targetHabit?.title}" (${date})`);
                     }

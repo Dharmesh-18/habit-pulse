@@ -1,0 +1,102 @@
+/* src/styles/themes.css */
+
+/* =========================================================
+   1. NOVA (Default — Classic Soft Tactile Neumorphism)
+   ========================================================= */
+:root,
+[data-theme="nova"] {
+  --theme-bg: #e6ecf4;
+  --theme-surface: #e6ecf4;
+  --theme-surface-elevated: #edf2f8;
+  --theme-text: #334155;
+  --theme-dark: #0f172a;
+  --theme-muted: #64748b;
+  --theme-accent: #4f46e5;
+  --theme-accent-glow: rgba(79, 70, 229, 0.38);
+
+  --theme-shadow-flat: 6px 6px 14px #c2c9d2, -6px -6px 14px #ffffff;
+  --theme-shadow-flat-sm: 3px 3px 7px #c2c9d2, -3px -3px 7px #ffffff;
+  --theme-shadow-flat-lg: 10px 10px 22px #bcc4ce, -10px -10px 22px #ffffff;
+  --theme-shadow-pressed: inset 4px 4px 8px #c2c9d2, inset -4px -4px 8px #ffffff;
+  --theme-shadow-pressed-sm: inset 2px 2px 4px #c2c9d2, inset -2px -2px 4px #ffffff;
+
+  --theme-border: rgba(255, 255, 255, 0.65);
+  --theme-backdrop-blur: 0px;
+  --theme-bg-pattern: none;
+}
+
+/* =========================================================
+   2. FOREST (Organic Emerald & Sage Tactile Theme)
+   ========================================================= */
+[data-theme="forest"] {
+  --theme-bg: #dfeae2;
+  --theme-surface: #dfeae2;
+  --theme-surface-elevated: #e7f1ea;
+  --theme-text: #1e3a2f;
+  --theme-dark: #0d231b;
+  --theme-muted: #527364;
+  --theme-accent: #059669;
+  --theme-accent-glow: rgba(5, 150, 105, 0.38);
+
+  --theme-shadow-flat: 6px 6px 14px #b8c9be, -6px -6px 14px #ffffff;
+  --theme-shadow-flat-sm: 3px 3px 7px #b8c9be, -3px -3px 7px #ffffff;
+  --theme-shadow-flat-lg: 10px 10px 22px #afc2b6, -10px -10px 22px #ffffff;
+  --theme-shadow-pressed: inset 4px 4px 8px #b8c9be, inset -4px -4px 8px #ffffff;
+  --theme-shadow-pressed-sm: inset 2px 2px 4px #b8c9be, inset -2px -2px 4px #ffffff;
+
+  --theme-border: rgba(255, 255, 255, 0.72);
+  --theme-backdrop-blur: 0px;
+  --theme-bg-pattern: radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.08), transparent 45%);
+}
+
+/* =========================================================
+   3. DARK (Deep Slate Grey & Midnight Navy Neumorphism)
+   ========================================================= */
+[data-theme="dark"] {
+  --theme-bg: #151922;
+  --theme-surface: #191e29;
+  --theme-surface-elevated: #1f2634;
+  --theme-text: #cbd5e1;
+  --theme-dark: #f1f5f9;
+  --theme-muted: #64748b;
+  --theme-accent: #3b82f6;
+  --theme-accent-glow: rgba(59, 130, 246, 0.45);
+
+  --theme-shadow-flat: 6px 6px 14px #0c0f15, -5px -5px 12px #222938;
+  --theme-shadow-flat-sm: 3px 3px 7px #0c0f15, -3px -3px 7px #222938;
+  --theme-shadow-flat-lg: 10px 10px 22px #090b10, -8px -8px 18px #262e3f;
+  --theme-shadow-pressed: inset 4px 4px 8px #0c0f15, inset -4px -4px 8px #222938;
+  --theme-shadow-pressed-sm: inset 2px 2px 4px #0c0f15, inset -2px -2px 4px #222938;
+
+  --theme-border: rgba(148, 163, 184, 0.1);
+  --theme-backdrop-blur: 0px;
+  --theme-bg-pattern: radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.09), transparent 40%);
+}
+
+/* =========================================================
+   4. SPACE (Translucent Glassmorphism + Cosmic Shiny Highlights)
+   ========================================================= */
+[data-theme="space"] {
+  --theme-bg: #080b14;
+  --theme-surface: rgba(22, 28, 48, 0.58);
+  --theme-surface-elevated: rgba(32, 41, 70, 0.78);
+  --theme-text: #d6e0f5;
+  --theme-dark: #ffffff;
+  --theme-muted: #8a99bd;
+  --theme-accent: #a855f7;
+  --theme-accent-glow: rgba(168, 85, 247, 0.55);
+
+  /* Specular top-left glass rim highlight + deep ambient shadow */
+  --theme-shadow-flat: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+  --theme-shadow-flat-sm: 0 4px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
+  --theme-shadow-flat-lg: 0 14px 40px rgba(0, 0, 0, 0.65), inset 0 1px 1px 0 rgba(255, 255, 255, 0.28), 0 0 22px rgba(168, 85, 247, 0.16);
+  --theme-shadow-pressed: inset 0 2px 8px rgba(0, 0, 0, 0.65), inset 0 -1px 0 0 rgba(255, 255, 255, 0.1);
+  --theme-shadow-pressed-sm: inset 0 1px 5px rgba(0, 0, 0, 0.6), inset 0 -1px 0 0 rgba(255, 255, 255, 0.08);
+
+  --theme-border: rgba(255, 255, 255, 0.15);
+  --theme-backdrop-blur: 16px;
+  --theme-bg-pattern:
+    radial-gradient(circle at 18% 12%, rgba(168, 85, 247, 0.22) 0%, transparent 38%),
+    radial-gradient(circle at 82% 22%, rgba(56, 189, 248, 0.18) 0%, transparent 42%),
+    radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.16) 0%, transparent 45%);
+}

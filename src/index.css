@@ -1,8 +1,54 @@
+/* src/index.css */
+@import "./styles/themes.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-neu-bg text-neu-text antialiased min-h-screen font-sans;
-  user-select: none;
+@layer base {
+  body {
+    background-color: var(--theme-bg);
+    background-image: var(--theme-bg-pattern);
+    background-attachment: fixed;
+    color: var(--theme-text);
+    @apply antialiased min-h-screen font-sans transition-colors duration-300;
+    user-select: none;
+  }
+}
+
+/* Global Surface & Glassmorphism Support */
+.bg-neu-bg {
+  background-color: var(--theme-surface);
+  backdrop-filter: blur(var(--theme-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--theme-backdrop-blur));
+}
+
+/* Space Theme Shiny Rim & Interactive Specular Sweep (NO position override) */
+[data-theme="space"] .shadow-neu-flat,
+[data-theme="space"] .shadow-neu-flat-sm,
+[data-theme="space"] .shadow-neu-flat-lg {
+  border: 1px solid var(--theme-border);
+}
+
+[data-theme="space"] button.shadow-neu-flat:hover,
+[data-theme="space"] button.shadow-neu-flat-sm:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 8px 26px rgba(168, 85, 247, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
+}
+
+/* Sticky Table Cells in Space Theme */
+[data-theme="space"] th.sticky,
+[data-theme="space"] td.sticky {
+  background-color: #111629;
+}
+
+/* Native time input padding & theme-aware clock icon */
+input[type="time"] {
+  padding-left: 0.75rem;
+  padding-right: 0.65rem;
+}
+
+[data-theme="dark"] input[type="time"],
+[data-theme="space"] input[type="time"] {
+  color-scheme: dark;
 }

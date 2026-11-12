@@ -5,25 +5,24 @@ export default {
     extend: {
       colors: {
         neu: {
-          bg: "#e6ecf4",
-          surface: "#e6ecf4",
-          accent: "#4f46e5",
-          accentHover: "#4338ca",
-          text: "#334155",
-          muted: "#64748b",
-          dark: "#1e293b",
+          bg: "var(--theme-surface)",
+          canvas: "var(--theme-bg)",
+          elevated: "var(--theme-surface-elevated)",
+          accent: "var(--theme-accent)",
+          text: "var(--theme-text)",
+          muted: "var(--theme-muted)",
+          dark: "var(--theme-dark)",
           danger: "#ef4444",
           success: "#10b981",
         },
       },
       boxShadow: {
-        // Raised surface
-        "neu-flat": "6px 6px 14px #c2c9d2, -6px -6px 14px #ffffff",
-        "neu-flat-sm": "3px 3px 7px #c2c9d2, -3px -3px 7px #ffffff",
-        "neu-flat-lg": "10px 10px 22px #c2c9d2, -10px -10px 22px #ffffff",
-        // Recessed / Inset for inputs & active buttons
-        "neu-pressed": "inset 4px 4px 8px #c2c9d2, inset -4px -4px 8px #ffffff",
-        "neu-pressed-sm": "inset 2px 2px 4px #c2c9d2, inset -2px -2px 4px #ffffff",
+        "neu-flat": "var(--theme-shadow-flat)",
+        "neu-flat-sm": "var(--theme-shadow-flat-sm)",
+        "neu-flat-lg": "var(--theme-shadow-flat-lg)",
+        "neu-pressed": "var(--theme-shadow-pressed)",
+        "neu-pressed-sm": "var(--theme-shadow-pressed-sm)",
+        "neu-glow": "0 0 14px var(--theme-accent-glow)",
       },
     },
   },
