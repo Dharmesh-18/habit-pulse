@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { NeuCard } from "../components/ui/NeuCard";
 import { CreateHabitCard } from "../components/habit/CreateHabitCard";
 import { HabitMatrix, type HabitItem } from "../components/habit/HabitMatrix";
+import { ConsistencyGraphCard } from "../components/habit/ConsistencyGraphCard";
 import { useToast } from "../context/ToastContext";
 import { parseConvexError } from "../lib/errorUtils";
 
@@ -23,7 +24,36 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     sessionToken ? { sessionToken } : "skip"
   );
 
-  const toggleTodayMutation = useMutation(api.habits.index.toggleToday);
+  // ⚡ 0ms Optimistic UI Update wired directly into Convex's local query cache
+  const toggleTodayMutation = useMutation(
+    api.habits.index.toggleToday
+  ).withOptimisticUpdate((localStore, args) => {
+    const currentHabits = localStore.getQuery(api.habits.index.listWithLogs, {
+      sessionToken: args.sessionToken,
+    });
+
+    if (currentHabits !== undefined) {
+      const updatedHabits = currentHabits.map((habit) => {
+        if (habit._id !== args.habitId) return habit;
+
+        const currentlyCompleted = Boolean(habit.logs?.[args.date]);
+        return {
+          ...habit,
+          logs: {
+            ...habit.logs,
+            [args.date]: !currentlyCompleted,
+          },
+        };
+      });
+
+      localStore.setQuery(
+        api.habits.index.listWithLogs,
+        { sessionToken: args.sessionToken },
+        updatedHabits
+      );
+    }
+  });
+
   const updateHabitMutation = useMutation(
     api.habits.index.updateWithVersionCheck
   );
@@ -31,20 +61,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const handleToggleDate = async (id: string, date: string) => {
     if (!habits) return;
+    const targetHabit = habits.find((h) => h._id === id);
+    const willBeDone = !Boolean(targetHabit?.logs?.[date]);
+
     try {
-      const done = await toggleTodayMutation({
+      await toggleTodayMutation({
         sessionToken,
         habitId: id as Id<"habits">,
         date,
       });
-      const targetHabit = habits.find((h) => h._id === id);
 
-      if (done) {
+      if (willBeDone) {
         toast.success(`Marked "${targetHabit?.title}" done (${date})`);
       } else {
-        toast.error(`Unmarked "${targetHabit?.title}" (${date})`);
+        toast.info(`Unmarked "${targetHabit?.title}" (${date})`);
       }
     } catch (err: unknown) {
+      // Note: Convex automatically rolls back the optimistic checkbox state on error!
       toast.error(parseConvexError(err));
     }
   };
@@ -79,7 +112,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="flex flex-col gap-8">
       <CreateHabitCard sessionToken={sessionToken} />
 
-      <main className="flex flex-col gap-4 relative z-10">
+      <main className="flex flex-col gap-8 relative z-10">
         {habits === undefined ? (
           <p className="text-xs text-neu-muted text-center py-8">
             Syncing with Convex backend...
@@ -89,12 +122,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             No habits yet. Add your first habit above to begin tracking.
           </NeuCard>
         ) : (
-          <HabitMatrix
-            habits={habits as unknown as HabitItem[]}
-            onToggleDate={handleToggleDate}
-            onUpdate={handleUpdateHabit}
-            onDelete={handleDeleteHabit}
-          />
+          <>
+            <HabitMatrix
+              habits={habits as unknown as HabitItem[]}
+              onToggleDate={handleToggleDate}
+              onUpdate={handleUpdateHabit}
+              onDelete={handleDeleteHabit}
+            />
+
+            <ConsistencyGraphCard habits={habits as unknown as HabitItem[]} />
+          </>
         )}
       </main>
     </div>

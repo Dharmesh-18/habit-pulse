@@ -236,6 +236,15 @@ export const toggleToday = mutation({
   handler: async (ctx, args) => {
     const user = await authenticate(ctx, args.sessionToken);
 
+    await assertRateLimit(ctx, {
+      key: `toggle_habit:${user.userId}`,
+      maxRequests: 15,
+      windowMs: 60 * 1000,
+    });
+
+    const habit = await ctx.db.get(args.habitId); 
+    if (!habit || habit.userId !== user.userId || habit.isArchived) throw new ConvexError("Unauthorized");
+
     const existingLog = await ctx.db
       .query("habitLogs")
       .withIndex("by_habit_date", (q) =>

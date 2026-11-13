@@ -25,6 +25,8 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 export interface HabitItem {
   _id: string;
+  _creationTime?: number;
+  createdAt?: number;
   title: string;
   category: string;
   reminderTime?: string;

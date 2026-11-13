@@ -8,9 +8,13 @@ This project demonstrates core backend primitives: optimistic concurrency contro
 
 ## Screenshots
 
-![Login Preview](./assets/login.png)
+![Login Preview](./assets/auth.png)
 
-![Dashboard Preview](./assets/dashboard.png)
+![Dashboard Preview](./assets/dashboard1.png)
+![Dashboard Preview](./assets/dashboard2.png)
+![Dashboard Preview](./assets/dashboard3.png)
+
+![Dashboard Preview](./assets/profile.png)
 
 ## 🚀 Key Features & Convex Concepts Demonstrated
 
