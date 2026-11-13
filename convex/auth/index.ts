@@ -1,5 +1,5 @@
 // convex/auth/index.ts
-import { mutation, query } from "../_generated/server";
+import { mutation, query, internalMutation, QueryCtx, MutationCtx } from "../_generated/server";
 import { v, ConvexError } from "convex/values";
 import { assertRateLimit } from "../common/rateLimiter";
 
@@ -17,7 +17,6 @@ export const register = mutation({
     email: v.string(),
     password: v.string(),
     name: v.string(),
-    role: v.optional(v.union(v.literal("admin"), v.literal("user"))),
   },
   handler: async (ctx, args) => {
     // 1. IP / Email Rate Limit
@@ -42,7 +41,6 @@ export const register = mutation({
       email,
       name: args.name.trim(),
       passwordHash,
-      role: args.role ?? "user",
       createdAt: Date.now(),
     });
 
@@ -56,7 +54,7 @@ export const register = mutation({
       expiresAt,
     });
 
-    return { token, name: args.name, email, role: args.role ?? "user" };
+    return { token, name: args.name, email };
   },
 });
 
@@ -84,6 +82,12 @@ export const login = mutation({
       throw new ConvexError("Invalid email or password");
     }
 
+    if (!user.passwordHash) {
+      throw new ConvexError(
+        `This account uses ${user.authProvider || "Google"} sign-in. Please click "Continue with Google".`
+      );
+    }
+
     const hash = await hashPassword(args.password);
     if (user.passwordHash !== hash) {
       throw new ConvexError("Invalid email or password");
@@ -98,7 +102,7 @@ export const login = mutation({
       expiresAt,
     });
 
-    return { token, name: user.name, email: user.email, role: user.role };
+    return { token, name: user.name, email: user.email };
   },
 });
 
@@ -120,7 +124,6 @@ export const getMe = query({
       id: user._id,
       email: user.email,
       name: user.name,
-      role: user.role,
       avatarStorageId: user.avatarStorageId,
     };
   },
@@ -159,5 +162,63 @@ export const updateProfile = mutation({
     await ctx.db.patch(session.userId, patchData);
 
     return { success: true };
+  },
+});
+
+export const upsertOAuthUser = internalMutation({
+  args: {
+    provider: v.string(),
+    providerAccountId: v.string(),
+    email: v.string(),
+    name: v.string(),
+    avatarUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    let userId = existingUser?._id;
+
+    if (existingUser) {
+      // Link OAuth metadata if not already set
+      await ctx.db.patch(existingUser._id, {
+        authProvider: existingUser.authProvider || args.provider,
+        providerAccountId: args.providerAccountId,
+        externalAvatarUrl: existingUser.externalAvatarUrl || args.avatarUrl,
+      });
+    } else {
+      // Create fresh OAuth user
+      userId = await ctx.db.insert("users", {
+        email: args.email,
+        name: args.name,
+        authProvider: args.provider,
+        providerAccountId: args.providerAccountId,
+        externalAvatarUrl: args.avatarUrl,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Create a standard session token (7 days expiry)
+    const token =
+      Math.random().toString(36).substring(2) +
+      Math.random().toString(36).substring(2) +
+      Date.now().toString(36);
+
+    await ctx.db.insert("userSessions", {
+      userId: userId!,
+      token,
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return {
+      token,
+      user: {
+        id: userId!,
+        name: existingUser?.name || args.name,
+        email: args.email,
+      },
+    };
   },
 });

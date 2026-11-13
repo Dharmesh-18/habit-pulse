@@ -6,7 +6,7 @@ export interface AuthenticatedUser {
   userId: Id<"users">;
   email: string;
   name: string;
-  role: "admin" | "user";
+  // role: "admin" | "user";
 }
 
 export async function authenticate(
@@ -35,7 +35,7 @@ export async function authenticate(
     userId: user._id,
     email: user.email,
     name: user.name,
-    role: user.role,
+    // role: user.role,
   };
 }
 
@@ -44,8 +44,8 @@ export async function requireAdmin(
   sessionToken?: string
 ): Promise<AuthenticatedUser> {
   const user = await authenticate(ctx, sessionToken);
-  if (user.role !== "admin") {
-    throw new Error("FORBIDDEN: Admin permissions required");
-  }
+  // if (user.role !== "admin") {
+  //   throw new Error("FORBIDDEN: Admin permissions required");
+  // }
   return user;
 }

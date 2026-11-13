@@ -95,27 +95,77 @@ export const create = mutation({
       updatedAt: now,
     });
 
-    // SCHEDULER TRIGGER (Demonstrating runAfter background scheduling)
-    if (args.reminderTime) {
-      const targetTimestamp = calculateNextReminderTimestamp(
-        args.reminderTime,
-        args.timezoneOffset ?? 0,
-      );
+    const userDoc = await ctx.db.get(user.userId);
 
-      console.log(
-        `[SCHEDULED] Reminder for "${args.title}" at: ${new Date(targetTimestamp).toISOString()} (in ${Math.round((targetTimestamp - Date.now()) / 1000)}s)`,
-      );
+    // 1. Immediate Confirmation Email (Non-blocking background execution)
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.actions.sendHabitCreatedNotification,
+      {
+        email: user.email,
+        userName: userDoc?.name,
+        habitTitle: args.title.trim(),
+        category: args.category,
+        reminderTime: args.reminderTime,
+      }
+    );
+
+    // 2. Scheduled Daily Reminder Email (if reminderTime is provided)
+    if (args.reminderTime) {
+      const [hours, minutes] = args.reminderTime.split(":").map(Number);
+      const nowMs = Date.now();
+      const offsetMs = (args.timezoneOffset ?? -330) * 60 * 1000;
+      const userLocalNow = new Date(nowMs - offsetMs);
+
+      const targetLocal = new Date(userLocalNow);
+      targetLocal.setUTCHours(hours, minutes, 0, 0);
+
+      let scheduledTimestamp = targetLocal.getTime() + offsetMs;
+
+      // Agar aaj ka time nikal chuka hai, to kal ke liye shift karo (+24h)
+      if (scheduledTimestamp <= nowMs) {
+        scheduledTimestamp += 24 * 60 * 60 * 1000;
+        targetLocal.setUTCDate(targetLocal.getUTCDate() + 1);
+      }
+
+      const yyyy = targetLocal.getUTCFullYear();
+      const mm = String(targetLocal.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(targetLocal.getUTCDate()).padStart(2, "0");
+      const targetDateKey = `${yyyy}-${mm}-${dd}`;
 
       await ctx.scheduler.runAt(
-        targetTimestamp,
-        internal.jobs.reminders.processReminderAction,
+        scheduledTimestamp,
+        internal.jobs.reminders.sendHabitReminder,
         {
           habitId,
           userEmail: user.email,
-          title: args.title,
-        },
+          todayDate: targetDateKey,
+          scheduledTimestamp,
+        }
       );
     }
+
+    // SCHEDULER TRIGGER (Demonstrating runAfter background scheduling)
+    // if (args.reminderTime) {
+    //   const targetTimestamp = calculateNextReminderTimestamp(
+    //     args.reminderTime,
+    //     args.timezoneOffset ?? 0,
+    //   );
+
+    //   console.log(
+    //     `[SCHEDULED] Reminder for "${args.title}" at: ${new Date(targetTimestamp).toISOString()} (in ${Math.round((targetTimestamp - Date.now()) / 1000)}s)`,
+    //   );
+
+    //   await ctx.scheduler.runAt(
+    //     targetTimestamp,
+    //     internal.jobs.reminders.processReminderAction,
+    //     {
+    //       habitId,
+    //       userEmail: user.email,
+    //       title: args.title,
+    //     },
+    //   );
+    // }
 
     return habitId;
   },

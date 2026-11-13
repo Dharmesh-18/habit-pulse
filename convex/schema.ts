@@ -4,10 +4,12 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    email: v.string(),
-    passwordHash: v.string(),
     name: v.string(),
-    role: v.union(v.literal("admin"), v.literal("user")),
+    email: v.string(),
+    passwordHash: v.optional(v.string()), // Optional for OAuth users
+    authProvider: v.optional(v.string()), // "credentials" | "google" | "github" | "facebook"
+    providerAccountId: v.optional(v.string()),
+    externalAvatarUrl: v.optional(v.string()), // Google/GitHub profile picture URL
     avatarStorageId: v.optional(v.id("_storage")),
     createdAt: v.number(),
   })
