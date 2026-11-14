@@ -1,6 +1,6 @@
 // convex/common/auth.ts
-import { MutationCtx, QueryCtx } from "../_generated/server";
-import { Doc, Id } from "../_generated/dataModel";
+import { type MutationCtx, type QueryCtx } from "../_generated/server";
+import { type Id } from "../_generated/dataModel";
 
 export interface AuthenticatedUser {
   userId: Id<"users">;

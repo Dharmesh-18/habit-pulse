@@ -2,7 +2,7 @@
 "use node";
 
 import nodemailer from "nodemailer";
-import { ChannelProvider, NotificationPayload, RecipientInfo } from "../types";
+import { type ChannelProvider, type NotificationPayload, type RecipientInfo } from "../types";
 import { buildEmailTemplate } from "../templates";
 
 

@@ -1,5 +1,5 @@
 // convex/common/rateLimiter.ts
-import { MutationCtx } from "../_generated/server";
+import { type MutationCtx } from "../_generated/server";
 import { ConvexError } from "convex/values";
 
 interface RateLimitConfig {

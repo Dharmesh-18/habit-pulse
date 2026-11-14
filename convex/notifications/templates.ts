@@ -1,5 +1,5 @@
 // convex/notifications/templates.ts
-import { NotificationPayload, RecipientInfo } from "./types";
+import { type NotificationPayload, type RecipientInfo } from "./types";
 
 interface RenderedEmail {
   subject: string;

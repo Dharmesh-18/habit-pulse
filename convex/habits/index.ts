@@ -1,5 +1,5 @@
 // convex/habits/index.ts
-import { mutation, query, internalMutation } from "../_generated/server";
+import { internalMutation, mutation, query } from "../_generated/server";
 import { v, ConvexError } from "convex/values";
 import { authenticate } from "../common/auth";
 import { assertRateLimit } from "../common/rateLimiter";
@@ -272,41 +272,41 @@ export const toggleToday = mutation({
   },
 });
 
-function calculateNextReminderTimestamp(
-  timeStr: string,
-  timezoneOffsetMinutes: number = 0,
-): number {
-  const [targetHours, targetMinutes] = timeStr.split(":").map(Number);
+// function calculateNextReminderTimestamp(
+//   timeStr: string,
+//   timezoneOffsetMinutes: number = 0,
+// ): number {
+//   const [targetHours, targetMinutes] = timeStr.split(":").map(Number);
 
-  // 1. Current UTC time
-  const now = new Date();
+//   // 1. Current UTC time
+//   const now = new Date();
 
-  // 2. Client ka current local time nikalen
-  // getTimezoneOffset() gives minutes subtracted from UTC to get local (IST is -330)
-  const clientNowMs = now.getTime() - timezoneOffsetMinutes * 60 * 1000;
-  const clientNow = new Date(clientNowMs);
+//   // 2. Client ka current local time nikalen
+//   // getTimezoneOffset() gives minutes subtracted from UTC to get local (IST is -330)
+//   const clientNowMs = now.getTime() - timezoneOffsetMinutes * 60 * 1000;
+//   const clientNow = new Date(clientNowMs);
 
-  // 3. Client ke date par target time set karein
-  const targetLocal = new Date(clientNow);
-  targetLocal.setUTCHours(targetHours, targetMinutes, 0, 0);
+//   // 3. Client ke date par target time set karein
+//   const targetLocal = new Date(clientNow);
+//   targetLocal.setUTCHours(targetHours, targetMinutes, 0, 0);
 
-  // Agar target time aaj nikal chuka hai, to next day schedule karein
-  if (targetLocal.getTime() <= clientNow.getTime()) {
-    targetLocal.setUTCDate(targetLocal.getUTCDate() + 1);
-  }
+//   // Agar target time aaj nikal chuka hai, to next day schedule karein
+//   if (targetLocal.getTime() <= clientNow.getTime()) {
+//     targetLocal.setUTCDate(targetLocal.getUTCDate() + 1);
+//   }
 
-  // 4. Client local time ko wapas true UTC epoch ms me convert karein
-  const targetUtcMs = targetLocal.getTime() + timezoneOffsetMinutes * 60 * 1000;
+//   // 4. Client local time ko wapas true UTC epoch ms me convert karein
+//   const targetUtcMs = targetLocal.getTime() + timezoneOffsetMinutes * 60 * 1000;
 
-  return targetUtcMs;
-}
+//   return targetUtcMs;
+// }
 
 // 5. INTERNAL MUTATION: Used by background crons/workers only
 export const internalResetHabitFlags = internalMutation({
   args: { habitId: v.id("habits") },
   handler: async (ctx, args) => {
     // Accessible only from cron or actions, NOT exposed to frontend api
-    console.log(
+    console.log(ctx.auth.getUserIdentity() + 
       `[CRON RUN] Checking logs integrity for habit: ${args.habitId}`,
     );
   },

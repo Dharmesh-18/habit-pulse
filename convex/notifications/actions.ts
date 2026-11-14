@@ -4,7 +4,7 @@
 import { internalAction } from "../_generated/server";
 import { v } from "convex/values";
 import { EmailNotificationProvider } from "./providers/emailProvider";
-import { ChannelProvider, NotificationChannel, NotificationPayload, RecipientInfo } from "./types";
+import { type ChannelProvider, type NotificationChannel, type NotificationPayload, type RecipientInfo } from "./types";
 
 // Registry of active channel providers (Add WhatsAppProvider here in the future)
 const providers: Record<string, ChannelProvider> = {

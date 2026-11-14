@@ -1,5 +1,5 @@
 // convex/auth/index.ts
-import { mutation, query, internalMutation, QueryCtx, MutationCtx } from "../_generated/server";
+import { mutation, query, internalMutation } from "../_generated/server";
 import { v, ConvexError } from "convex/values";
 import { assertRateLimit } from "../common/rateLimiter";
 
