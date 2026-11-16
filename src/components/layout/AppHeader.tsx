@@ -1,9 +1,10 @@
 // src/components/layout/AppHeader.tsx
 import React from "react";
-import { Flame, LogOut } from "lucide-react";
+import { Flame, LogOut, Download } from "lucide-react";
 import { NeuButton } from "../ui/NeuButton";
 import { NeuThemeSelect } from "../ui/NeuThemeSelect";
 import { UserAvatar } from "../ui/UserAvatar";
+import { usePWAInstall } from "../../hooks/usePWAInstall";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 export type AppView = "dashboard" | "profile";
@@ -23,27 +24,46 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onNavigate,
   onLogout,
 }) => {
+  const { canInstall, promptInstall } = usePWAInstall();
+
   return (
-    <header className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <header className="flex items-center justify-between gap-2 sm:gap-4">
+      {/* Brand + Greeting */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         <div
           onClick={() => onNavigate("dashboard")}
-          className="w-10 h-10 rounded-xl bg-neu-bg shadow-neu-flat flex items-center justify-center text-neu-accent cursor-pointer active:shadow-neu-pressed transition-all"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-neu-bg shadow-neu-flat flex items-center justify-center text-neu-accent shrink-0 cursor-pointer active:shadow-neu-pressed transition-all"
         >
           <Flame className="w-5 h-5 stroke-[2.5]" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h1
             onClick={() => onNavigate("dashboard")}
-            className="text-lg font-bold text-neu-dark cursor-pointer hover:text-neu-accent transition-colors"
+            className="text-base sm:text-lg font-bold text-neu-dark cursor-pointer hover:text-neu-accent transition-colors truncate"
           >
             Habit Pulse
           </h1>
-          <p className="text-xs text-neu-muted">Welcome back, {userName}</p>
+          <p className="text-[11px] sm:text-xs text-neu-muted truncate">
+            Welcome, {userName}
+          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Controls */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {canInstall && (
+          <NeuButton
+            size="sm"
+            variant="primary"
+            onClick={promptInstall}
+            title="Install Habit Pulse App"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Install</span>
+          </NeuButton>
+        )}
+
         <NeuThemeSelect />
 
         <UserAvatar
@@ -59,10 +79,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <NeuButton
           size="sm"
           onClick={onLogout}
-          className="flex items-center gap-1.5"
+          title="Logout"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3"
         >
           <LogOut className="w-4 h-4" />
-          <span>Exit</span>
+          <span className="hidden sm:inline">Exit</span>
         </NeuButton>
       </div>
     </header>

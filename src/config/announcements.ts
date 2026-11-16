@@ -17,14 +17,10 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-16-notification-toggle",
+  id: "2026-11-16-pwa-mobile-experience",
   badge: "NEW",
-  title: "Email Notification Controls",
+  title: "Install Habit Pulse as an App",
   description:
-    "Pause or resume habit creation alerts and daily reminder emails anytime from your account settings.",
-  action: {
-    label: "Manage in Profile",
-    targetView: "profile",
-  },
+    "Habit Pulse is now mobile-optimized! Tap Install in the header (or Add to Home Screen) for a fast, native app experience.",
   isActive: true,
 };

@@ -187,22 +187,22 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
     <>
       <NeuCard className="p-0 overflow-hidden flex flex-col">
         {/* Top Grid Header: Month & Year Navigation */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-black/5 bg-neu-bg">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-center text-neu-accent">
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-black/5 bg-neu-bg">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-center text-neu-accent shrink-0">
               <Calendar className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-neu-dark tracking-tight">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-neu-dark tracking-tight truncate">
                 {monthYearLabel}
               </h2>
-              <p className="text-[11px] text-neu-muted">
-                Click today&apos;s cell to log progress
+              <p className="text-[11px] text-neu-muted truncate">
+                Tap today&apos;s cell to log
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <NeuButton size="sm" onClick={handleJumpToday}>
               Today
             </NeuButton>
@@ -226,11 +226,14 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
         </div>
 
         {/* Scrollable Matrix Table */}
-        <div ref={scrollContainerRef} className="overflow-x-auto relative">
+        <div
+          ref={scrollContainerRef}
+          className="overflow-x-auto relative scroll-smooth"
+        >
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-black/5">
-                <th className="sticky left-0 z-20 bg-neu-bg px-5 py-3 min-w-[230px] max-w-[260px] text-xs font-bold uppercase tracking-wider text-neu-muted shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]">
+                <th className="sticky left-0 z-20 bg-neu-bg px-3 sm:px-5 py-2.5 sm:py-3 w-[138px] min-w-[138px] max-w-[138px] sm:w-[235px] sm:min-w-[235px] sm:max-w-[235px] text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neu-muted shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]">
                   Habit
                 </th>
 
@@ -239,7 +242,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                     key={day.dateStr}
                     data-today={day.isToday ? "true" : undefined}
                     className={cn(
-                      "px-1.5 py-2.5 text-center min-w-[42px] select-none transition-colors",
+                      "px-1 sm:px-1.5 py-2 sm:py-2.5 text-center min-w-[40px] sm:min-w-[44px] select-none transition-colors",
                       day.isToday && "bg-neu-accent/5"
                     )}
                   >
@@ -273,42 +276,73 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                     key={habit._id}
                     className="group hover:bg-black/[0.015] transition-colors"
                   >
-                    {/* Sticky Habit Info Cell */}
-                    <td className="sticky left-0 z-10 bg-neu-bg px-5 py-3 min-w-[230px] max-w-[260px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
+                    {/* Sticky Habit Info Cell: Compact on Mobile, Expanded on Desktop */}
+                    <td className="sticky left-0 z-10 bg-neu-bg px-3 sm:px-5 py-2.5 sm:py-3 w-[138px] min-w-[138px] max-w-[138px] sm:w-[235px] sm:min-w-[235px] sm:max-w-[235px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]">
+                      <div className="flex items-start sm:items-center justify-between gap-2">
+                        <div className="flex items-start sm:items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                          {/* Category Icon */}
                           <div
                             title={catMeta.label}
-                            className="w-8 h-8 rounded-xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-center shrink-0"
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-center shrink-0 mt-0.5 sm:mt-0"
                           >
-                            <CategoryIcon className={cn("w-4 h-4", catMeta.color)} />
+                            <CategoryIcon
+                              className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", catMeta.color)}
+                            />
                           </div>
 
-                          <div className="min-w-0">
+                          {/* Title + Meta + Mobile Action Row */}
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
                               <span
                                 title={habit.title}
-                                className="font-semibold text-sm text-neu-dark truncate"
+                                className="font-semibold text-xs sm:text-sm text-neu-dark truncate block"
                               >
                                 {habit.title}
                               </span>
-                              <HabitThumbnail storageId={habit.customImageStorageId} />
+                              <HabitThumbnail
+                                storageId={habit.customImageStorageId}
+                              />
                             </div>
 
-                            <div className="flex items-center gap-2 text-[10px] text-neu-muted mt-0.5">
-                              {habit.reminderTime && (
-                                <span className="flex items-center gap-0.5">
-                                  <Clock className="w-3 h-3" />
-                                  {habit.reminderTime}
+                            {/* Sub-row: Reminder Time + Stacked Actions on Mobile */}
+                            <div className="flex items-center justify-between sm:justify-start gap-2 mt-1">
+                              <div className="flex items-center gap-1.5 text-[10px] text-neu-muted truncate">
+                                {habit.reminderTime && (
+                                  <span className="flex items-center gap-0.5">
+                                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
+                                    {habit.reminderTime}
+                                  </span>
+                                )}
+                                <span className="hidden sm:inline font-mono opacity-75">
+                                  v{habit.version}
                                 </span>
-                              )}
-                              <span className="font-mono opacity-75">v{habit.version}</span>
+                              </div>
+
+                              {/* Mobile-only Edit & Delete Buttons right below Habit Name */}
+                              <div className="flex sm:hidden items-center gap-1 shrink-0">
+                                <button
+                                  type="button"
+                                  title="Edit Habit"
+                                  onClick={() => openEditModal(habit)}
+                                  className="p-1 rounded-md bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed text-neu-muted hover:text-neu-accent"
+                                >
+                                  <Edit2 className="w-2.5 h-2.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Delete Habit"
+                                  onClick={() => setDeletingHabit(habit)}
+                                  className="p-1 rounded-md bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed text-neu-muted hover:text-neu-danger"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Row Quick Actions -> Open Centered Modals */}
-                        <div className="flex items-center gap-1 shrink-0 opacity-75 group-hover:opacity-100 transition-opacity">
+                        {/* Desktop-only Right-aligned Quick Actions */}
+                        <div className="hidden sm:flex items-center gap-1 shrink-0 opacity-75 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             title="Edit Habit"
@@ -336,7 +370,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                         <td
                           key={day.dateStr}
                           className={cn(
-                            "px-1.5 py-2.5 text-center",
+                            "px-1 sm:px-1.5 py-2 sm:py-2.5 text-center",
                             day.isToday && "bg-neu-accent/5"
                           )}
                         >
@@ -354,7 +388,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                                   })`
                             }
                             className={cn(
-                              "w-7 h-7 rounded-lg mx-auto flex items-center justify-center transition-all duration-200 outline-none",
+                              "w-8 h-8 sm:w-7 sm:h-7 rounded-lg mx-auto flex items-center justify-center transition-all duration-200 outline-none",
                               !day.isToday && "opacity-50 cursor-not-allowed",
                               isDone
                                 ? "bg-neu-accent text-white shadow-[0_0_8px_rgba(79,70,229,0.45)] scale-105"

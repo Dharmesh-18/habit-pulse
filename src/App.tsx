@@ -40,7 +40,7 @@ export function App() {
 
   // 2. Authenticated Layout -> Header + Active Page
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
+    <div className="max-w-4xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8 flex flex-col gap-5 sm:gap-6">
       <AppHeader
         userName={currentUser.name}
         avatarStorageId={currentUser.avatarStorageId}

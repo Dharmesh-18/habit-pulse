@@ -52,3 +52,18 @@ input[type="time"] {
 [data-theme="space"] input[type="time"] {
   color-scheme: dark;
 }
+
+/* Mobile PWA & Native Touch Ergonomics */
+html,
+body {
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}

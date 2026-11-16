@@ -1,5 +1,5 @@
 // src/components/habit/ConsistencyGraphCard.tsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { NeuCard } from "../ui/NeuCard";
 import type { HabitItem } from "./HabitMatrix";
 import { TrendingUp, CheckCircle2, Flame, Calendar } from "lucide-react";
@@ -14,15 +14,13 @@ type RangeDays = 7 | 14 | 30;
 interface DailyConsistencyPoint {
   dateKey: string; // "2026-11-13"
   shortLabel: string; // "13 Nov"
+  compactLabel: string; // "13"
   dayName: string; // "Fri"
   completedCount: number;
   totalActiveCount: number;
   percentage: number; // 0 to 100
 }
 
-/**
- * Converts an Epoch timestamp (ms) into local "YYYY-MM-DD" string
- */
 function toLocalDateKey(timestampMs: number): string {
   const d = new Date(timestampMs);
   const yyyy = d.getFullYear();
@@ -31,12 +29,10 @@ function toLocalDateKey(timestampMs: number): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/**
- * Generates an array of the last N local dates ending today (oldest -> today)
- */
 function getLastNDates(n: number): {
   dateKey: string;
   shortLabel: string;
+  compactLabel: string;
   dayName: string;
 }[] {
   const result = [];
@@ -49,8 +45,9 @@ function getLastNDates(n: number): {
       day: "numeric",
       month: "short",
     });
+    const compactLabel = String(d.getDate());
     const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
-    result.push({ dateKey, shortLabel, dayName });
+    result.push({ dateKey, shortLabel, compactLabel, dayName });
   }
   return result;
 }
@@ -60,12 +57,23 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
 }) => {
   const [range, setRange] = useState<RangeDays>(14);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
 
-  // 1. Historical Date-Aware Calculation Engine using `habit.logs[dateKey]`
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener("change", handleChange);
+    return () => mq.removeEventListener("change", handleChange);
+  }, []);
+
+  // 1. Historical Date-Aware Calculation Engine
   const dataPoints: DailyConsistencyPoint[] = useMemo(() => {
     const dates = getLastNDates(range);
 
-    return dates.map(({ dateKey, shortLabel, dayName }) => {
+    return dates.map(({ dateKey, shortLabel, compactLabel, dayName }) => {
       let totalActiveCount = 0;
       let completedCount = 0;
 
@@ -75,11 +83,8 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
           ? toLocalDateKey(createdMs)
           : "1970-01-01";
 
-        // O(1) dictionary lookup on `logs: Record<string, boolean>`
         const isCompletedOnDate = Boolean(habit.logs?.[dateKey]);
 
-        // Habit counts on dateKey ONLY if it existed on/before dateKey,
-        // OR if the user back-marked it completed on dateKey
         if (habitCreatedDateKey <= dateKey || isCompletedOnDate) {
           totalActiveCount++;
           if (isCompletedOnDate) {
@@ -96,6 +101,7 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
       return {
         dateKey,
         shortLabel,
+        compactLabel,
         dayName,
         completedCount,
         totalActiveCount,
@@ -104,7 +110,7 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
     });
   }, [habits, range]);
 
-  // 2. Summary Metrics (Average Consistency & Perfect 100% Days)
+  // 2. Summary Metrics
   const stats = useMemo(() => {
     const activeDays = dataPoints.filter((d) => d.totalActiveCount > 0);
     const avgConsistency =
@@ -123,13 +129,13 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
     };
   }, [dataPoints]);
 
-  // 3. SVG Coordinate Geometry
-  const svgWidth = 760;
-  const svgHeight = 210;
-  const padLeft = 38;
-  const padRight = 20;
-  const padTop = 24;
-  const padBottom = 34;
+  // 3. Responsive SVG Coordinate Geometry (1:1 crisp scaling on mobile & desktop)
+  const svgWidth = isMobile ? 380 : 760;
+  const svgHeight = isMobile ? 210 : 215;
+  const padLeft = isMobile ? 42 : 44;
+  const padRight = isMobile ? 16 : 22;
+  const padTop = 26;
+  const padBottom = 36;
   const chartW = svgWidth - padLeft - padRight;
   const chartH = svgHeight - padTop - padBottom;
 
@@ -141,7 +147,7 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
       const y = padTop + chartH - (pt.percentage / 100) * chartH;
       return { x, y, pt, idx };
     });
-  }, [dataPoints, chartW, chartH]);
+  }, [dataPoints, padLeft, chartW, chartH]);
 
   // Smooth Cubic Bezier SVG Path
   const { linePath, areaPath } = useMemo(() => {
@@ -174,20 +180,39 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
   const activePoint =
     hoveredIndex !== null ? coords[hoveredIndex] : coords[coords.length - 1];
 
+  // Touch scrub handler for mobile fingers
+  const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (!e.touches.length || coords.length === 0) return;
+    const svgRect = e.currentTarget.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - svgRect.left;
+    const scaledX = (touchX / svgRect.width) * svgWidth;
+
+    let nearestIdx = 0;
+    let minDist = Infinity;
+    for (const c of coords) {
+      const dist = Math.abs(c.x - scaledX);
+      if (dist < minDist) {
+        minDist = dist;
+        nearestIdx = c.idx;
+      }
+    }
+    setHoveredIndex(nearestIdx);
+  };
+
   return (
-    <NeuCard className="flex flex-col gap-5 relative z-10">
+    <NeuCard className="flex flex-col gap-4 sm:gap-5 relative z-10 p-4 sm:p-6">
       {/* Header & Range Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-neu-bg shadow-neu-flat-sm flex items-center justify-center text-neu-accent shrink-0">
-            <TrendingUp className="w-5 h-5" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-neu-bg shadow-neu-flat-sm flex items-center justify-center text-neu-accent shrink-0">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-neu-dark tracking-tight">
+            <h2 className="text-sm sm:text-base font-bold text-neu-dark tracking-tight">
               Daily Consistency Curve
             </h2>
-            <p className="text-xs text-neu-muted">
-              Calculated dynamically against each day&apos;s active habits
+            <p className="text-[11px] sm:text-xs text-neu-muted">
+              Calculated against each day&apos;s active habits
             </p>
           </div>
         </div>
@@ -216,9 +241,9 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
       </div>
 
       {/* KPI Summary Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Selected / Today's Completion */}
-        <div className="p-3.5 rounded-2xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-between">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+        {/* Selected / Today's Completion (Full width on mobile for clarity) */}
+        <div className="col-span-2 sm:col-span-1 p-3 sm:p-3.5 rounded-2xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-neu-muted block">
               {hoveredIndex !== null
@@ -226,7 +251,7 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
                 : "Today's Completion"}
             </span>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-lg font-extrabold text-neu-dark">
+              <span className="text-base sm:text-lg font-extrabold text-neu-dark">
                 {activePoint?.pt.completedCount ?? 0} /{" "}
                 {activePoint?.pt.totalActiveCount ?? 0}
               </span>
@@ -235,36 +260,36 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
               </span>
             </div>
           </div>
-          <CheckCircle2 className="w-5 h-5 text-neu-accent opacity-80" />
+          <CheckCircle2 className="w-5 h-5 text-neu-accent opacity-80 shrink-0" />
         </div>
 
         {/* Period Average */}
-        <div className="p-3.5 rounded-2xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-between">
+        <div className="col-span-1 p-3 sm:p-3.5 rounded-2xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-neu-muted block">
-              {range}-Day Average
+              {range}D Avg
             </span>
-            <span className="text-lg font-extrabold text-neu-dark mt-0.5 block">
+            <span className="text-base sm:text-lg font-extrabold text-neu-dark mt-0.5 block">
               {stats.avgConsistency}%
             </span>
           </div>
-          <TrendingUp className="w-5 h-5 text-emerald-500 opacity-80" />
+          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 opacity-80 shrink-0" />
         </div>
 
         {/* 100% Perfect Days */}
-        <div className="p-3.5 rounded-2xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-between">
+        <div className="col-span-1 p-3 sm:p-3.5 rounded-2xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-neu-muted block">
-              100% Perfect Days
+              100% Days
             </span>
-            <span className="text-lg font-extrabold text-neu-dark mt-0.5 block">
+            <span className="text-base sm:text-lg font-extrabold text-neu-dark mt-0.5 block">
               {stats.perfectDays}{" "}
-              <span className="text-xs font-normal text-neu-muted">
-                / {range} days
+              <span className="text-[11px] sm:text-xs font-normal text-neu-muted">
+                / {range}d
               </span>
             </span>
           </div>
-          <Flame className="w-5 h-5 text-amber-500 opacity-80" />
+          <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 opacity-80 shrink-0" />
         </div>
       </div>
 
@@ -272,8 +297,10 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
       <div className="w-full pt-1 select-none">
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="w-full h-48 overflow-visible"
+          className="w-full h-48 sm:h-52 overflow-visible touch-pan-y"
           onMouseLeave={() => setHoveredIndex(null)}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={() => setHoveredIndex(null)}
         >
           <defs>
             <linearGradient id="consistencyAreaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -290,8 +317,8 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
             </linearGradient>
           </defs>
 
-          {/* Horizontal Y-Axis Grid Lines (0%, 25%, 50%, 75%, 100%) */}
-          {[0, 25, 50, 75, 100].map((val) => {
+          {/* Horizontal Y-Axis Grid Lines (0%, 50%, 100% on Mobile; 0%, 25%, 50%, 75%, 100% on Desktop) */}
+          {(isMobile ? [0, 50, 100] : [0, 25, 50, 75, 100]).map((val) => {
             const y = padTop + chartH - (val / 100) * chartH;
             return (
               <g key={val}>
@@ -301,14 +328,14 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
                   x2={svgWidth - padRight}
                   y2={y}
                   stroke="var(--theme-muted)"
-                  strokeOpacity={0.18}
+                  strokeOpacity={0.2}
                   strokeDasharray="4 4"
                 />
                 <text
                   x={padLeft - 8}
-                  y={y + 3}
+                  y={y + 4}
                   textAnchor="end"
-                  className="text-[10px] fill-neu-muted font-semibold"
+                  className="text-[11px] sm:text-[11px] fill-neu-muted font-bold"
                 >
                   {val}%
                 </text>
@@ -324,11 +351,11 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
             d={linePath}
             fill="none"
             stroke="var(--theme-accent)"
-            strokeWidth={3}
+            strokeWidth={isMobile ? 2.5 : 3}
             strokeLinecap="round"
           />
 
-          {/* Vertical Guide Line on Hover */}
+          {/* Vertical Guide Line on Hover / Touch */}
           {activePoint && (
             <line
               x1={activePoint.x}
@@ -346,13 +373,23 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
           {coords.map(({ x, y, pt, idx }) => {
             const isHovered = hoveredIndex === idx;
             const isToday = idx === coords.length - 1;
-            const showXLabel =
-              range === 7 ||
-              (range === 14 && idx % 2 === 0) ||
-              (range === 30 && idx % 5 === 0) ||
-              isToday;
+
+            const showXLabel = isMobile
+              ? (range === 7 && (idx % 2 === 0 || isToday)) ||
+                (range === 14 && (idx % 3 === 0 || isToday)) ||
+                (range === 30 && (idx % 7 === 0 || isToday))
+              : range === 7 ||
+                (range === 14 && idx % 2 === 0) ||
+                (range === 30 && idx % 5 === 0) ||
+                isToday;
 
             const colWidth = chartW / coords.length;
+
+            // Prevent tooltip clipping near left/right edges on mobile
+            const clampedTooltipX = Math.min(
+              Math.max(x, padLeft + 34),
+              svgWidth - padRight - 34
+            );
 
             return (
               <g key={pt.dateKey}>
@@ -362,7 +399,7 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
                     y={svgHeight - 8}
                     textAnchor="middle"
                     className={cn(
-                      "text-[10px] font-semibold transition-colors",
+                      "text-[11px] font-semibold transition-colors",
                       isHovered || isToday
                         ? "fill-neu-accent font-bold"
                         : "fill-neu-muted"
@@ -375,7 +412,7 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
                 <circle
                   cx={x}
                   cy={y}
-                  r={isHovered ? 6 : isToday ? 4.5 : 3.5}
+                  r={isHovered ? 6 : isToday ? 4.5 : isMobile ? 3 : 3.5}
                   fill="var(--theme-surface)"
                   stroke="var(--theme-accent)"
                   strokeWidth={isHovered || isToday ? 3 : 2}
@@ -383,12 +420,17 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
                 />
 
                 {isHovered && (
-                  <g transform={`translate(${x}, ${Math.max(y - 26, 14)})`}>
+                  <g
+                    transform={`translate(${clampedTooltipX}, ${Math.max(
+                      y - 26,
+                      14
+                    )})`}
+                  >
                     <rect
-                      x={-36}
-                      y={-14}
-                      width={72}
-                      height={20}
+                      x={-38}
+                      y={-15}
+                      width={76}
+                      height={22}
                       rx={6}
                       fill="var(--theme-surface-elevated)"
                       stroke="var(--theme-border)"
@@ -397,7 +439,7 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
                       x={0}
                       y={0}
                       textAnchor="middle"
-                      className="text-[10px] font-bold fill-neu-dark"
+                      className="text-[11px] font-bold fill-neu-dark"
                     >
                       {pt.completedCount}/{pt.totalActiveCount} ({pt.percentage}%)
                     </text>
@@ -421,13 +463,17 @@ export const ConsistencyGraphCard: React.FC<ConsistencyGraphCardProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="flex items-center justify-between text-[11px] text-neu-muted border-t border-black/5 pt-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-neu-muted border-t border-black/5 pt-2.5">
         <span className="flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-neu-accent" />
-          Hover over any point to inspect that day&apos;s exact habit ratio
+          <Calendar className="w-3.5 h-3.5 text-neu-accent shrink-0" />
+          <span>
+            {isMobile
+              ? "Tap or drag on chart to inspect daily ratio"
+              : "Hover over any point to inspect that day's exact habit ratio"}
+          </span>
         </span>
         <span className="font-semibold text-neu-dark">
-          Active Habits Today: {habits.length}
+          Active Habits: {habits.length}
         </span>
       </div>
     </NeuCard>

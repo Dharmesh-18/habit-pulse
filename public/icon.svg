@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8edf5" />
+      <stop offset="100%" stop-color="#d5dce6" />
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#8b7eff" />
+      <stop offset="50%" stop-color="#6d5dfc" />
+      <stop offset="100%" stop-color="#5241e8" />
+    </linearGradient>
+    <filter id="neuShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="10" dy="10" stdDeviation="14" flood-color="#b8c1cf" flood-opacity="0.75" />
+      <feDropShadow dx="-10" dy="-10" stdDeviation="14" flood-color="#ffffff" flood-opacity="0.9" />
+    </filter>
+  </defs>
+
+  <!-- Neumorphic Base Squircle -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bgGrad)" />
+
+  <!-- Inner Raised Tile -->
+  <rect x="56" y="56" width="400" height="400" rx="88" fill="#e0e5ec" filter="url(#neuShadow)" />
+
+  <!-- Lucide-style Flame Path Scaled & Centered -->
+  <g transform="translate(136, 126) scale(10)">
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" fill="url(#flameGrad)" stroke="url(#flameGrad)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>
