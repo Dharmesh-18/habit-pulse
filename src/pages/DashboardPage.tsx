@@ -86,13 +86,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     id: string,
     title: string,
     category: string,
-    expectedVersion: number
+    expectedVersion: number,
+    reminderTime?: string
   ) => {
     await updateHabitMutation({
       sessionToken,
       habitId: id as Id<"habits">,
       title,
       category,
+      reminderTime,
+      timezoneOffset: new Date().getTimezoneOffset(),
       expectedVersion,
     });
     toast.success(`Updated "${title}"`);

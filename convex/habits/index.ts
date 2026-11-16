@@ -113,26 +113,10 @@ export const create = mutation({
 
     // 2. Scheduled Daily Reminder Email (if reminderTime is provided)
     if (args.reminderTime) {
-      const [hours, minutes] = args.reminderTime.split(":").map(Number);
-      const nowMs = Date.now();
-      const offsetMs = (args.timezoneOffset ?? -330) * 60 * 1000;
-      const userLocalNow = new Date(nowMs - offsetMs);
-
-      const targetLocal = new Date(userLocalNow);
-      targetLocal.setUTCHours(hours, minutes, 0, 0);
-
-      let scheduledTimestamp = targetLocal.getTime() + offsetMs;
-
-      // Agar aaj ka time nikal chuka hai, to kal ke liye shift karo (+24h)
-      if (scheduledTimestamp <= nowMs) {
-        scheduledTimestamp += 24 * 60 * 60 * 1000;
-        targetLocal.setUTCDate(targetLocal.getUTCDate() + 1);
-      }
-
-      const yyyy = targetLocal.getUTCFullYear();
-      const mm = String(targetLocal.getUTCMonth() + 1).padStart(2, "0");
-      const dd = String(targetLocal.getUTCDate()).padStart(2, "0");
-      const targetDateKey = `${yyyy}-${mm}-${dd}`;
+      const { scheduledTimestamp, targetDateKey } = computeNextReminderSchedule(
+        args.reminderTime,
+        args.timezoneOffset ?? -330
+      );
 
       await ctx.scheduler.runAt(
         scheduledTimestamp,
@@ -142,31 +126,11 @@ export const create = mutation({
           userEmail: user.email,
           todayDate: targetDateKey,
           scheduledTimestamp,
+          expectedReminderTime: args.reminderTime,
         }
       );
     }
 
-    // SCHEDULER TRIGGER (Demonstrating runAfter background scheduling)
-    // if (args.reminderTime) {
-    //   const targetTimestamp = calculateNextReminderTimestamp(
-    //     args.reminderTime,
-    //     args.timezoneOffset ?? 0,
-    //   );
-
-    //   console.log(
-    //     `[SCHEDULED] Reminder for "${args.title}" at: ${new Date(targetTimestamp).toISOString()} (in ${Math.round((targetTimestamp - Date.now()) / 1000)}s)`,
-    //   );
-
-    //   await ctx.scheduler.runAt(
-    //     targetTimestamp,
-    //     internal.jobs.reminders.processReminderAction,
-    //     {
-    //       habitId,
-    //       userEmail: user.email,
-    //       title: args.title,
-    //     },
-    //   );
-    // }
 
     return habitId;
   },
@@ -179,7 +143,9 @@ export const updateWithVersionCheck = mutation({
     habitId: v.id("habits"),
     title: v.string(),
     category: v.string(),
-    expectedVersion: v.number(), // The version the client saw before editing
+    reminderTime: v.optional(v.string()),
+    timezoneOffset: v.optional(v.number()),
+    expectedVersion: v.number(),
   },
   handler: async (ctx, args) => {
     const user = await authenticate(ctx, args.sessionToken);
@@ -213,15 +179,39 @@ export const updateWithVersionCheck = mutation({
       }
     }
 
+    const normalizedReminderTime = args.reminderTime?.trim() || undefined;
+    const isReminderChanged = normalizedReminderTime !== habit.reminderTime;
+
     // Bump version atomically
     const nextVersion = habit.version + 1;
     await ctx.db.patch(habit._id, {
       title: args.title.trim(),
       normalizedTitle,
       category: args.category,
+      reminderTime: normalizedReminderTime,
       version: nextVersion,
       updatedAt: Date.now(),
     });
+
+    // Reschedule only if reminderTime actually changed and is non-empty
+    if (isReminderChanged && normalizedReminderTime) {
+      const { scheduledTimestamp, targetDateKey } = computeNextReminderSchedule(
+        normalizedReminderTime,
+        args.timezoneOffset ?? -330
+      );
+
+      await ctx.scheduler.runAt(
+        scheduledTimestamp,
+        internal.jobs.reminders.sendHabitReminder,
+        {
+          habitId: habit._id,
+          userEmail: user.email,
+          todayDate: targetDateKey,
+          scheduledTimestamp,
+          expectedReminderTime: normalizedReminderTime,
+        }
+      );
+    }
 
     return { success: true, newVersion: nextVersion };
   },
@@ -273,35 +263,6 @@ export const toggleToday = mutation({
   },
 });
 
-// function calculateNextReminderTimestamp(
-//   timeStr: string,
-//   timezoneOffsetMinutes: number = 0,
-// ): number {
-//   const [targetHours, targetMinutes] = timeStr.split(":").map(Number);
-
-//   // 1. Current UTC time
-//   const now = new Date();
-
-//   // 2. Client ka current local time nikalen
-//   // getTimezoneOffset() gives minutes subtracted from UTC to get local (IST is -330)
-//   const clientNowMs = now.getTime() - timezoneOffsetMinutes * 60 * 1000;
-//   const clientNow = new Date(clientNowMs);
-
-//   // 3. Client ke date par target time set karein
-//   const targetLocal = new Date(clientNow);
-//   targetLocal.setUTCHours(targetHours, targetMinutes, 0, 0);
-
-//   // Agar target time aaj nikal chuka hai, to next day schedule karein
-//   if (targetLocal.getTime() <= clientNow.getTime()) {
-//     targetLocal.setUTCDate(targetLocal.getUTCDate() + 1);
-//   }
-
-//   // 4. Client local time ko wapas true UTC epoch ms me convert karein
-//   const targetUtcMs = targetLocal.getTime() + timezoneOffsetMinutes * 60 * 1000;
-
-//   return targetUtcMs;
-// }
-
 // 5. INTERNAL MUTATION: Used by background crons/workers only
 export const internalResetHabitFlags = internalMutation({
   args: { habitId: v.id("habits") },
@@ -337,3 +298,34 @@ export const remove = mutation({
     return { success: true, title: habit.title };
   },
 });
+
+
+function computeNextReminderSchedule(
+  reminderTime: string,
+  timezoneOffset: number = -330
+): { scheduledTimestamp: number; targetDateKey: string } {
+  const [hours, minutes] = reminderTime.split(":").map(Number);
+  const nowMs = Date.now();
+  const offsetMs = timezoneOffset * 60 * 1000;
+  const userLocalNow = new Date(nowMs - offsetMs);
+
+  const targetLocal = new Date(userLocalNow);
+  targetLocal.setUTCHours(hours, minutes, 0, 0);
+
+  let scheduledTimestamp = targetLocal.getTime() + offsetMs;
+
+  // If target time has already passed today in user's local timezone, schedule for tomorrow
+  if (scheduledTimestamp <= nowMs) {
+    scheduledTimestamp += 24 * 60 * 60 * 1000;
+    targetLocal.setUTCDate(targetLocal.getUTCDate() + 1);
+  }
+
+  const yyyy = targetLocal.getUTCFullYear();
+  const mm = String(targetLocal.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(targetLocal.getUTCDate()).padStart(2, "0");
+
+  return {
+    scheduledTimestamp,
+    targetDateKey: `${yyyy}-${mm}-${dd}`,
+  };
+}

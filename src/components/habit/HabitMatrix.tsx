@@ -42,15 +42,18 @@ interface HabitMatrixProps {
     habitId: string,
     title: string,
     category: string,
-    expectedVersion: number
+    expectedVersion: number,
+    reminderTime?: string,
   ) => Promise<void>;
   onDelete: (habitId: string) => Promise<void>;
 }
 
-const HabitThumbnail: React.FC<{ storageId?: Id<"_storage"> }> = ({ storageId }) => {
+const HabitThumbnail: React.FC<{ storageId?: Id<"_storage"> }> = ({
+  storageId,
+}) => {
   const url = useQuery(
     api.storage.index.getImageUrl,
-    storageId ? { storageId } : "skip"
+    storageId ? { storageId } : "skip",
   );
   if (!url) return null;
   return (
@@ -79,6 +82,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
   const [editingHabit, setEditingHabit] = useState<HabitItem | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState("Health");
+  const [editReminderTime, setEditReminderTime] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const [deletingHabit, setDeletingHabit] = useState<HabitItem | null>(null);
@@ -86,20 +90,25 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
 
   const days = useMemo(
     () => getDaysInMonth(selectedYear, selectedMonth),
-    [selectedYear, selectedMonth]
+    [selectedYear, selectedMonth],
   );
 
   const monthYearLabel = useMemo(() => {
-    return new Date(selectedYear, selectedMonth, 1).toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
+    return new Date(selectedYear, selectedMonth, 1).toLocaleDateString(
+      "en-US",
+      {
+        month: "long",
+        year: "numeric",
+      },
+    );
   }, [selectedYear, selectedMonth]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    const todayEl = container.querySelector('[data-today="true"]') as HTMLElement;
+    const todayEl = container.querySelector(
+      '[data-today="true"]',
+    ) as HTMLElement;
     if (todayEl) {
       const offset = todayEl.offsetLeft - container.clientWidth / 2;
       container.scrollTo({ left: Math.max(0, offset), behavior: "smooth" });
@@ -135,6 +144,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
     setEditingHabit(habit);
     setEditTitle(habit.title);
     setEditCategory(habit.category);
+    setEditReminderTime(habit.reminderTime ?? "");
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -146,7 +156,8 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
         editingHabit._id,
         editTitle.trim(),
         editCategory,
-        editingHabit.version
+        editingHabit.version,
+        editReminderTime || undefined,
       );
       setEditingHabit(null);
     } catch (err: unknown) {
@@ -163,7 +174,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
         editingHabit._id,
         editTitle.trim() + " [Conflict]",
         editCategory,
-        editingHabit.version - 1
+        editingHabit.version - 1,
       );
     } catch (err: unknown) {
       toast.error(parseConvexError(err));
@@ -243,7 +254,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                     data-today={day.isToday ? "true" : undefined}
                     className={cn(
                       "px-1 sm:px-1.5 py-2 sm:py-2.5 text-center min-w-[40px] sm:min-w-[44px] select-none transition-colors",
-                      day.isToday && "bg-neu-accent/5"
+                      day.isToday && "bg-neu-accent/5",
                     )}
                   >
                     <div className="flex flex-col items-center gap-0.5">
@@ -255,7 +266,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                           "w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold",
                           day.isToday
                             ? "bg-neu-accent text-white shadow-[0_0_8px_rgba(79,70,229,0.4)]"
-                            : "text-neu-dark"
+                            : "text-neu-dark",
                         )}
                       >
                         {day.dayNumber}
@@ -286,7 +297,10 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                             className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-center shrink-0 mt-0.5 sm:mt-0"
                           >
                             <CategoryIcon
-                              className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", catMeta.color)}
+                              className={cn(
+                                "w-3.5 h-3.5 sm:w-4 sm:h-4",
+                                catMeta.color,
+                              )}
                             />
                           </div>
 
@@ -371,7 +385,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                           key={day.dateStr}
                           className={cn(
                             "px-1 sm:px-1.5 py-2 sm:py-2.5 text-center",
-                            day.isToday && "bg-neu-accent/5"
+                            day.isToday && "bg-neu-accent/5",
                           )}
                         >
                           <button
@@ -395,8 +409,8 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                                 : cn(
                                     "bg-neu-bg shadow-neu-pressed-sm text-transparent",
                                     day.isToday &&
-                                      "hover:shadow-neu-flat-sm hover:text-neu-accent/40"
-                                  )
+                                      "hover:shadow-neu-flat-sm hover:text-neu-accent/40",
+                                  ),
                             )}
                           >
                             <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -427,6 +441,28 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
               placeholder="Habit title"
               required
             />
+
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <NeuInput
+                  label="Daily Reminder Time"
+                  type="time"
+                  value={editReminderTime}
+                  onChange={(e) => setEditReminderTime(e.target.value)}
+                />
+              </div>
+              {editReminderTime && (
+                <NeuButton
+                  type="button"
+                  size="sm"
+                  onClick={() => setEditReminderTime("")}
+                  className="h-[42px] px-3 text-neu-muted hover:text-neu-danger"
+                  title="Remove daily reminder"
+                >
+                  Clear
+                </NeuButton>
+              )}
+            </div>
 
             <NeuCategorySelect
               label="Category"

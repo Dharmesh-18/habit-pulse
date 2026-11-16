@@ -29,7 +29,7 @@ export const getHabitReminderStatus = internalQuery({
     const log = await ctx.db
       .query("habitLogs")
       .withIndex("by_habit_date", (q) =>
-        q.eq("habitId", args.habitId).eq("date", args.todayDate)
+        q.eq("habitId", args.habitId).eq("date", args.todayDate),
       )
       .first();
 
@@ -49,7 +49,8 @@ export const sendHabitReminder = internalAction({
     habitId: v.id("habits"),
     userEmail: v.string(),
     todayDate: v.string(),
-    scheduledTimestamp: v.optional(v.number()), // Drift-free scheduling ke liye
+    scheduledTimestamp: v.optional(v.number()),
+    expectedReminderTime: v.optional(v.string()), // Stale job guard
   },
   handler: async (ctx, args) => {
     const status = await ctx.runQuery(
@@ -57,16 +58,29 @@ export const sendHabitReminder = internalAction({
       {
         habitId: args.habitId,
         todayDate: args.todayDate,
-      }
+      },
     );
 
-    // 1. Stop chain permanently if habit was deleted, archived, or reminder removed
+    // 1. Stop chain permanently if habit was deleted, archived, or reminder cleared
     if (!status) {
-      console.log(`[ReminderChain] Stopped for habit ${args.habitId} (deleted/archived).`);
+      console.log(
+        `[ReminderChain] Stopped for habit ${args.habitId} (deleted/archived/no reminder).`,
+      );
       return;
     }
 
-    // 2. Agar aaj ki habit abhi tak done mark nahi hui hai, tabhi reminder mail bhejo
+    // 2. Self-Invalidation Guard: Ignore stale jobs from an older reminderTime
+    if (
+      args.expectedReminderTime &&
+      args.expectedReminderTime !== status.reminderTime
+    ) {
+      console.log(
+        `[ReminderChain] Ignoring stale job (${args.expectedReminderTime}) for "${status.title}" — active time is now ${status.reminderTime}.`,
+      );
+      return;
+    }
+
+    // 3. Send email only if habit isn't completed today
     if (!status.isCompleted) {
       await ctx.runAction(
         internal.notifications.actions.sendHabitReminderNotification,
@@ -77,15 +91,15 @@ export const sendHabitReminder = internalAction({
           habitTitle: status.title,
           category: status.category,
           reminderTime: status.reminderTime,
-        }
+        },
       );
     } else {
       console.log(
-        `[ReminderChain] Habit "${status.title}" already completed for ${args.todayDate}. Skipping email.`
+        `[ReminderChain] Habit "${status.title}" already completed for ${args.todayDate}. Skipping email.`,
       );
     }
 
-    // 3. Schedule tomorrow's reminder (Exact +24h from target time so clock never drifts)
+    // 4. Schedule tomorrow's reminder with current active reminderTime
     const baseTime = args.scheduledTimestamp ?? Date.now();
     const nextTimestamp = baseTime + ONE_DAY_MS;
     const tomorrowDateKey = getNextDateKey(args.todayDate);
@@ -98,11 +112,12 @@ export const sendHabitReminder = internalAction({
         userEmail: args.userEmail,
         todayDate: tomorrowDateKey,
         scheduledTimestamp: nextTimestamp,
-      }
+        expectedReminderTime: status.reminderTime,
+      },
     );
 
     console.log(
-      `[ReminderChain] Scheduled next reminder for "${status.title}" on ${tomorrowDateKey}`
+      `[ReminderChain] Scheduled next reminder for "${status.title}" on ${tomorrowDateKey} at ${status.reminderTime}`,
     );
   },
 });
@@ -110,6 +125,9 @@ export const sendHabitReminder = internalAction({
 export const triggerDailyReminders = internalAction({
   args: {},
   handler: async () => {
-    console.log("[CRON] Hourly health check executed at", new Date().toISOString());
+    console.log(
+      "[CRON] Hourly health check executed at",
+      new Date().toISOString(),
+    );
   },
 });
