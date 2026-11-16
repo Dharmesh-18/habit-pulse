@@ -11,6 +11,11 @@ export default defineSchema({
     providerAccountId: v.optional(v.string()),
     externalAvatarUrl: v.optional(v.string()), // Google/GitHub profile picture URL
     avatarStorageId: v.optional(v.id("_storage")),
+    notificationPreferences: v.optional(
+      v.object({
+      enabled: v.optional(v.boolean()),
+    }),
+),
     createdAt: v.number(),
   })
     .index("by_email", ["email"]),

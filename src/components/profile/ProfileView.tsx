@@ -10,6 +10,8 @@ import { UserAvatar } from "../ui/UserAvatar";
 import { useToast } from "../../context/ToastContext";
 import { parseConvexError } from "../../lib/errorUtils";
 import { Camera, ArrowLeft, Lock, Check } from "lucide-react";
+import { cn } from "../../lib/utils";
+import { ConfirmActionModal } from "../ui/ConfirmActionModal";
 
 interface ProfileViewProps {
   user: {
@@ -17,6 +19,7 @@ interface ProfileViewProps {
     email: string;
     name: string;
     avatarStorageId?: Id<"_storage">;
+    notificationsEnabled?: boolean;
   };
   sessionToken: string;
   onBack: () => void;
@@ -35,6 +38,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const generateUploadUrl = useMutation(api.storage.index.generateUploadUrl);
   const updateProfile = useMutation(api.auth.index.updateProfile);
+
+  const updateNotificationPref = useMutation(
+    api.auth.index.updateNotificationPreference,
+  );
+
+  const isNotificationsEnabled = user.notificationsEnabled ?? true;
+  const [pendingToggle, setPendingToggle] = useState<boolean | null>(null);
+  const [isUpdatingPref, setIsUpdatingPref] = useState(false);
+
+  const handleConfirmToggle = async () => {
+    if (pendingToggle === null) return;
+    try {
+      setIsUpdatingPref(true);
+      await updateNotificationPref({
+        sessionToken,
+        enabled: pendingToggle,
+      });
+      toast.success(
+        pendingToggle
+          ? "Notifications turned ON."
+          : "Notifications turned OFF.",
+      );
+      setPendingToggle(null);
+    } catch (err: unknown) {
+      toast.error(parseConvexError(err));
+    } finally {
+      setIsUpdatingPref(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,7 +118,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   return (
     <div className="max-w-xl mx-auto w-full flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <NeuButton size="sm" onClick={onBack} className="flex items-center gap-1.5">
+        <NeuButton
+          size="sm"
+          onClick={onBack}
+          className="flex items-center gap-1.5"
+        >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Habits</span>
         </NeuButton>
@@ -129,7 +165,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 />
               </label>
             </div>
-            <p className="text-xs text-neu-muted">Click camera icon to change profile photo</p>
+            <p className="text-xs text-neu-muted">
+              Click camera icon to change profile photo
+            </p>
           </div>
 
           {/* Form Fields */}
@@ -159,7 +197,32 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex items-center justify-between gap-4 pt-3 border-t border-black/5">
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isNotificationsEnabled}
+                onClick={() => setPendingToggle(!isNotificationsEnabled)}
+                className={cn(
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-all duration-200 shadow-neu-pressed-sm focus:outline-none",
+                  isNotificationsEnabled ? "bg-neu-accent/25" : "bg-neu-bg",
+                )}
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-neu-flat-sm transition-transform duration-200",
+                    isNotificationsEnabled
+                      ? "translate-x-5 bg-neu-accent"
+                      : "translate-x-0 bg-neu-muted/60",
+                  )}
+                />
+              </button>
+              <span className="text-xs font-semibold text-neu-dark select-none">
+                Notifications {isNotificationsEnabled ? "On" : "Off"}
+              </span>
+            </div>
+
             <NeuButton
               type="submit"
               variant="primary"
@@ -172,6 +235,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         </form>
       </NeuCard>
+
+      <ConfirmActionModal
+        isOpen={pendingToggle !== null}
+        isTurningOff={pendingToggle === false}
+        variant={pendingToggle === false ? "danger" : "primary"}
+        title={
+          pendingToggle === false
+            ? "Turn off notifications?"
+            : "Turn on notifications?"
+        }
+        description={
+          pendingToggle === false
+            ? "Do you want to stop receiving notifications from Habit Pulse? You won't receive habit creation alerts or daily reminders until you turn this back on."
+            : "Do you want to start receiving notifications from Habit Pulse again?"
+        }
+        confirmLabel={
+          pendingToggle === false ? "Yes, Turn Off" : "Yes, Turn On"
+        }
+        isLoading={isUpdatingPref}
+        onConfirm={handleConfirmToggle}
+        onCancel={() => setPendingToggle(null)}
+      />
     </div>
   );
 };

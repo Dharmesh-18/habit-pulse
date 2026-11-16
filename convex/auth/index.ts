@@ -1,5 +1,5 @@
 // convex/auth/index.ts
-import { mutation, query, internalMutation } from "../_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "../_generated/server";
 import { v, ConvexError } from "convex/values";
 import { assertRateLimit } from "../common/rateLimiter";
 
@@ -125,6 +125,7 @@ export const getMe = query({
       email: user.email,
       name: user.name,
       avatarStorageId: user.avatarStorageId,
+      notificationsEnabled: user.notificationPreferences?.enabled ?? true,
     };
   },
 });
@@ -220,5 +221,37 @@ export const upsertOAuthUser = internalMutation({
         email: args.email,
       },
     };
+  },
+});
+
+export const updateNotificationPreference = mutation({
+  args: {
+    sessionToken: v.string(),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db
+      .query("userSessions")
+      .withIndex("by_token", (q) => q.eq("token", args.sessionToken))
+      .first();
+
+    if (!session || session.expiresAt < Date.now()) {
+      throw new ConvexError("UNAUTHORIZED: Session expired or invalid");
+    }
+
+    await ctx.db.patch(session.userId, {
+      notificationPreferences: {
+        enabled: args.enabled,
+      },
+    });
+
+    return { success: true, enabled: args.enabled };
+  },
+});
+
+export const getUserByIdInternal = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.userId);
   },
 });

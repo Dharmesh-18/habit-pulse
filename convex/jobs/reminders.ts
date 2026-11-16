@@ -34,6 +34,7 @@ export const getHabitReminderStatus = internalQuery({
       .first();
 
     return {
+      userId: habit.userId,
       title: habit.title,
       category: habit.category,
       reminderTime: habit.reminderTime,
@@ -70,6 +71,7 @@ export const sendHabitReminder = internalAction({
       await ctx.runAction(
         internal.notifications.actions.sendHabitReminderNotification,
         {
+          userId: status.userId,
           email: args.userEmail,
           userName: status.userName,
           habitTitle: status.title,

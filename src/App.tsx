@@ -6,6 +6,7 @@ import { AppHeader, type AppView } from "./components/layout/AppHeader";
 import { AuthPage } from "./pages/AuthPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProfileView } from "./components/profile/ProfileView";
+import { FeatureBanner } from "./components/ui/FeatureBanner";
 import { useToast } from "./context/ToastContext";
 
 export function App() {
@@ -39,7 +40,7 @@ export function App() {
 
   // 2. Authenticated Layout -> Header + Active Page
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
       <AppHeader
         userName={currentUser.name}
         avatarStorageId={currentUser.avatarStorageId}
@@ -47,6 +48,10 @@ export function App() {
         onNavigate={setCurrentView}
         onLogout={handleLogout}
       />
+
+      {currentView === "dashboard" && (
+        <FeatureBanner onNavigate={setCurrentView} />
+      )}
 
       {currentView === "profile" ? (
         <ProfileView

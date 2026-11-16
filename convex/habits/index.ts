@@ -102,6 +102,7 @@ export const create = mutation({
       0,
       internal.notifications.actions.sendHabitCreatedNotification,
       {
+        userId: user.userId,
         email: user.email,
         userName: userDoc?.name,
         habitTitle: args.title.trim(),
