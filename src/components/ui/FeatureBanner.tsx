@@ -1,21 +1,27 @@
 // src/components/ui/FeatureBanner.tsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sparkles, ArrowRight, X } from "lucide-react";
 import { LATEST_ANNOUNCEMENT } from "../../config/announcements";
 import type { AppView } from "../layout/AppHeader";
 
-interface FeatureBannerProps {
-  onNavigate?: (view: AppView) => void;
-}
-
 const STORAGE_KEY_PREFIX = "habit_pulse_dismissed_banner_";
 
-export const FeatureBanner: React.FC<FeatureBannerProps> = ({ onNavigate }) => {
+const VIEW_ROUTE_MAP: Record<AppView, string> = {
+  dashboard: "/",
+  leaderboard: "/leaderboard",
+  profile: "/profile",
+};
+
+export const FeatureBanner: React.FC = () => {
+  const navigate = useNavigate();
   const announcement = LATEST_ANNOUNCEMENT;
 
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
     if (!announcement.isActive) return true;
-    return localStorage.getItem(`${STORAGE_KEY_PREFIX}${announcement.id}`) === "true";
+    return (
+      localStorage.getItem(`${STORAGE_KEY_PREFIX}${announcement.id}`) === "true"
+    );
   });
 
   if (!announcement.isActive || isDismissed) {
@@ -28,8 +34,9 @@ export const FeatureBanner: React.FC<FeatureBannerProps> = ({ onNavigate }) => {
   };
 
   const handleActionClick = () => {
-    if (announcement.action && onNavigate) {
-      onNavigate(announcement.action.targetView);
+    if (announcement.action) {
+      const targetPath = VIEW_ROUTE_MAP[announcement.action.targetView] ?? "/";
+      navigate(targetPath);
     }
   };
 
@@ -69,7 +76,7 @@ export const FeatureBanner: React.FC<FeatureBannerProps> = ({ onNavigate }) => {
 
         {/* Action CTA + Dismiss Button */}
         <div className="flex items-center gap-2 shrink-0">
-          {announcement.action && onNavigate && (
+          {announcement.action && (
             <button
               type="button"
               onClick={handleActionClick}
@@ -93,7 +100,7 @@ export const FeatureBanner: React.FC<FeatureBannerProps> = ({ onNavigate }) => {
       </div>
 
       {/* Mobile Action Link (Cleanly stacked on small screens) */}
-      {announcement.action && onNavigate && (
+      {announcement.action && (
         <div className="mt-2.5 pl-12 md:hidden">
           <button
             type="button"

@@ -17,10 +17,14 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-16-pwa-mobile-experience",
+  id: "2026-11-17-live-leaderboard",
   badge: "NEW",
-  title: "Install Habit Pulse as an App",
+  title: "Live Community Leaderboard",
   description:
-    "Habit Pulse is now mobile-optimized! Tap Install in the header (or Add to Home Screen) for a fast, native app experience.",
+    "Compete in real time! Claim the #1 Champion Crown.",
+  action: {
+    label: "View Leaderboard",
+    targetView: "leaderboard"
+  },
   isActive: true,
 };

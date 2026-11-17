@@ -1,20 +1,21 @@
 // src/App.tsx
 import { useState } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { AppHeader, type AppView } from "./components/layout/AppHeader";
+import { ProtectedShell } from "./components/layout/ProtectedShell";
 import { AuthPage } from "./pages/AuthPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { ProfileView } from "./components/profile/ProfileView";
-import { FeatureBanner } from "./components/ui/FeatureBanner";
 import { useToast } from "./context/ToastContext";
 
 export function App() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [token, setToken] = useState<string>(
     () => localStorage.getItem("habit_token") || ""
   );
-  const [currentView, setCurrentView] = useState<AppView>("dashboard");
 
   const currentUser = useQuery(api.auth.index.getMe, {
     sessionToken: token || undefined,
@@ -23,46 +24,51 @@ export function App() {
   const handleAuthSuccess = (newToken: string) => {
     localStorage.setItem("habit_token", newToken);
     setToken(newToken);
-    setCurrentView("dashboard");
+    navigate("/", { replace: true });
   };
 
   const handleLogout = () => {
     localStorage.removeItem("habit_token");
     setToken("");
-    setCurrentView("dashboard");
+    navigate("/", { replace: true });
     toast.info("Logged out successfully");
   };
 
-  // 1. Unauthenticated View -> AuthPage
   if (!currentUser) {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;
   }
 
-  // 2. Authenticated Layout -> Header + Active Page
   return (
-    <div className="max-w-4xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8 flex flex-col gap-5 sm:gap-6">
-      <AppHeader
-        userName={currentUser.name}
-        avatarStorageId={currentUser.avatarStorageId}
-        currentView={currentView}
-        onNavigate={setCurrentView}
-        onLogout={handleLogout}
-      />
-
-      {currentView === "dashboard" && (
-        <FeatureBanner onNavigate={setCurrentView} />
-      )}
-
-      {currentView === "profile" ? (
-        <ProfileView
-          user={currentUser}
-          sessionToken={token}
-          onBack={() => setCurrentView("dashboard")}
+    <Routes>
+      <Route
+        element={
+          <ProtectedShell
+            userName={currentUser.name}
+            avatarStorageId={currentUser.avatarStorageId}
+            onLogout={handleLogout}
+          />
+        }
+      >
+        <Route path="/" element={<DashboardPage sessionToken={token} />} />
+        <Route
+          path="/leaderboard"
+          element={<LeaderboardPage sessionToken={token} />}
         />
-      ) : (
-        <DashboardPage sessionToken={token} />
-      )}
-    </div>
+        <Route
+          path="/profile"
+          element={
+            <ProfileView
+              user={currentUser}
+              sessionToken={token}
+              onBack={() => navigate("/")}
+            />
+          }
+        />
+      </Route>
+
+      {/* Fallback route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
