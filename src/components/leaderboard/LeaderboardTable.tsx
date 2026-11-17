@@ -103,7 +103,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 </td>
 
                 {/* 4. % Task Done (Mini Bar + Percentage) */}
-                <td className="py-3 pl-2 pr-3 sm:pr-6 text-right whitespace-nowrap">
+                <td className="py-3 pl-2 pr-3 sm:pr-6 text-center whitespace-nowrap">
                   <div className="inline-flex items-center justify-end gap-2.5">
                     <div className="hidden sm:block w-20 h-2 rounded-full bg-neu-bg shadow-neu-pressed-sm overflow-hidden">
                       <div
