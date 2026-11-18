@@ -82,17 +82,26 @@ export const sendHabitReminder = internalAction({
 
     // 3. Send email only if habit isn't completed today
     if (!status.isCompleted) {
-      await ctx.runAction(
-        internal.notifications.actions.sendHabitReminderNotification,
-        {
+      await Promise.allSettled([
+        ctx.runAction(
+          internal.notifications.actions.sendHabitReminderNotification,
+          {
+            userId: status.userId,
+            email: args.userEmail,
+            userName: status.userName,
+            habitTitle: status.title,
+            category: status.category,
+            reminderTime: status.reminderTime,
+          },
+        ),
+        ctx.runAction(internal.notifications.webPush.sendPushToUser, {
           userId: status.userId,
-          email: args.userEmail,
-          userName: status.userName,
-          habitTitle: status.title,
-          category: status.category,
-          reminderTime: status.reminderTime,
-        },
-      );
+          title: `⏰ ${status.title}`,
+          body: `Scheduled for ${status.reminderTime} (${status.category}). Tap to keep your streak alive!`,
+          url: "/",
+          tag: `habit-${args.habitId}`,
+        }),
+      ]);
     } else {
       console.log(
         `[ReminderChain] Habit "${status.title}" already completed for ${args.todayDate}. Skipping email.`,

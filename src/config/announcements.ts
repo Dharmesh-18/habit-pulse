@@ -17,14 +17,14 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-17-live-leaderboard",
+  id: "2026-11-18-web-push-notifications",
   badge: "NEW",
-  title: "Live Community Leaderboard",
+  title: "Lock-Screen Push Reminders",
   description:
-    "Compete in real time! Claim the #1 Champion Crown.",
+    "Never miss a habit! Enable Device Push Notifications in your Profile to get native alerts even when the app is closed.",
   action: {
-    label: "View Leaderboard",
-    targetView: "leaderboard"
+    label: "Enable in Profile",
+    targetView: "profile",
   },
   isActive: true,
 };

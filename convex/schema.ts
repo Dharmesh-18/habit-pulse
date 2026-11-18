@@ -58,4 +58,17 @@ export default defineSchema({
     timestamps: v.array(v.number()),
   })
     .index("by_key", ["key"]),
+
+  // Push subscription storage for web push notifications
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+    userAgent: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
 });

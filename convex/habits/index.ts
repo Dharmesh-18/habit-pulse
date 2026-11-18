@@ -108,14 +108,14 @@ export const create = mutation({
         habitTitle: args.title.trim(),
         category: args.category,
         reminderTime: args.reminderTime,
-      }
+      },
     );
 
     // 2. Scheduled Daily Reminder Email (if reminderTime is provided)
     if (args.reminderTime) {
       const { scheduledTimestamp, targetDateKey } = computeNextReminderSchedule(
         args.reminderTime,
-        args.timezoneOffset ?? -330
+        args.timezoneOffset ?? -330,
       );
 
       await ctx.scheduler.runAt(
@@ -127,10 +127,9 @@ export const create = mutation({
           todayDate: targetDateKey,
           scheduledTimestamp,
           expectedReminderTime: args.reminderTime,
-        }
+        },
       );
     }
-
 
     return habitId;
   },
@@ -197,7 +196,7 @@ export const updateWithVersionCheck = mutation({
     if (isReminderChanged && normalizedReminderTime) {
       const { scheduledTimestamp, targetDateKey } = computeNextReminderSchedule(
         normalizedReminderTime,
-        args.timezoneOffset ?? -330
+        args.timezoneOffset ?? -330,
       );
 
       await ctx.scheduler.runAt(
@@ -209,7 +208,7 @@ export const updateWithVersionCheck = mutation({
           todayDate: targetDateKey,
           scheduledTimestamp,
           expectedReminderTime: normalizedReminderTime,
-        }
+        },
       );
     }
 
@@ -233,8 +232,9 @@ export const toggleToday = mutation({
       windowMs: 60 * 1000,
     });
 
-    const habit = await ctx.db.get(args.habitId); 
-    if (!habit || habit.userId !== user.userId || habit.isArchived) throw new ConvexError("Unauthorized");
+    const habit = await ctx.db.get(args.habitId);
+    if (!habit || habit.userId !== user.userId || habit.isArchived)
+      throw new ConvexError("Unauthorized");
 
     const existingLog = await ctx.db
       .query("habitLogs")
@@ -268,8 +268,9 @@ export const internalResetHabitFlags = internalMutation({
   args: { habitId: v.id("habits") },
   handler: async (ctx, args) => {
     // Accessible only from cron or actions, NOT exposed to frontend api
-    console.log(ctx.auth.getUserIdentity() + 
-      `[CRON RUN] Checking logs integrity for habit: ${args.habitId}`,
+    console.log(
+      ctx.auth.getUserIdentity() +
+        `[CRON RUN] Checking logs integrity for habit: ${args.habitId}`,
     );
   },
 });
@@ -299,10 +300,9 @@ export const remove = mutation({
   },
 });
 
-
 function computeNextReminderSchedule(
   reminderTime: string,
-  timezoneOffset: number = -330
+  timezoneOffset: number = -330,
 ): { scheduledTimestamp: number; targetDateKey: string } {
   const [hours, minutes] = reminderTime.split(":").map(Number);
   const nowMs = Date.now();

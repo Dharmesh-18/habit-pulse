@@ -8,6 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      injectManifest: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+      },
       includeAssets: ["icon.svg", "apple-touch-icon.png"],
       manifest: {
         name: "Habit Pulse",

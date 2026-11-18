@@ -19,8 +19,10 @@ import type * as jobs_reminders from "../jobs/reminders.js";
 import type * as leaderboard_index from "../leaderboard/index.js";
 import type * as notifications_actions from "../notifications/actions.js";
 import type * as notifications_providers_emailProvider from "../notifications/providers/emailProvider.js";
+import type * as notifications_pushSubscriptions from "../notifications/pushSubscriptions.js";
 import type * as notifications_templates from "../notifications/templates.js";
 import type * as notifications_types from "../notifications/types.js";
+import type * as notifications_webPush from "../notifications/webPush.js";
 import type * as storage_index from "../storage/index.js";
 
 import type {
@@ -41,8 +43,10 @@ declare const fullApi: ApiFromModules<{
   "leaderboard/index": typeof leaderboard_index;
   "notifications/actions": typeof notifications_actions;
   "notifications/providers/emailProvider": typeof notifications_providers_emailProvider;
+  "notifications/pushSubscriptions": typeof notifications_pushSubscriptions;
   "notifications/templates": typeof notifications_templates;
   "notifications/types": typeof notifications_types;
+  "notifications/webPush": typeof notifications_webPush;
   "storage/index": typeof storage_index;
 }>;
 

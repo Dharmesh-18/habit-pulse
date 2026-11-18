@@ -12,6 +12,8 @@ import { parseConvexError } from "../../lib/errorUtils";
 import { Camera, ArrowLeft, Lock, Check } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { ConfirmActionModal } from "../ui/ConfirmActionModal";
+import { BellRing } from "lucide-react";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 interface ProfileViewProps {
   user: {
@@ -46,6 +48,31 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const isNotificationsEnabled = user.notificationsEnabled ?? true;
   const [pendingToggle, setPendingToggle] = useState<boolean | null>(null);
   const [isUpdatingPref, setIsUpdatingPref] = useState(false);
+
+  const {
+    isSupported: isPushSupported,
+    permission: pushPermission,
+    isEnabled: isPushEnabled,
+    isLoading: isPushLoading,
+    enablePush,
+    disablePush,
+  } = usePushNotifications(sessionToken);
+
+  const handleTogglePush = async () => {
+    try {
+      if (isPushEnabled) {
+        await disablePush();
+        toast.info("Device push notifications disabled");
+      } else {
+        await enablePush();
+        toast.success("Device push notifications enabled!");
+      }
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Could not update push settings",
+      );
+    }
+  };
 
   const handleConfirmToggle = async () => {
     if (pendingToggle === null) return;
@@ -232,6 +259,44 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <Check className="w-4 h-4" />
               <span>{isSaving ? "Saving..." : "Save Changes"}</span>
             </NeuButton>
+          </div>
+
+          {/* Device Push Notifications Card */}
+          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-neu-bg shadow-neu-pressed-sm">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-neu-bg shadow-neu-flat flex items-center justify-center text-neu-accent shrink-0 mt-0.5">
+                <BellRing className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-neu-dark">
+                  Device Push Notifications
+                </p>
+                <p className="text-xs text-neu-muted mt-0.5 leading-relaxed">
+                  {!isPushSupported
+                    ? "On iPhone/iPad, tap Share → Add to Home Screen first to enable push reminders."
+                    : pushPermission === "denied"
+                      ? "Blocked in browser settings. Enable notifications for this site to receive alerts."
+                      : "Receive native lock-screen reminders on this device even when the app is closed."}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isPushEnabled}
+              disabled={!isPushSupported || isPushLoading}
+              onClick={handleTogglePush}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 p-1 shadow-neu-pressed-sm disabled:opacity-40 disabled:cursor-not-allowed ${
+                isPushEnabled ? "bg-neu-accent" : "bg-neu-bg"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                  isPushEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
         </form>
       </NeuCard>
