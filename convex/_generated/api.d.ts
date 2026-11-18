@@ -18,6 +18,7 @@ import type * as habits_index from "../habits/index.js";
 import type * as jobs_reminders from "../jobs/reminders.js";
 import type * as leaderboard_index from "../leaderboard/index.js";
 import type * as notifications_actions from "../notifications/actions.js";
+import type * as notifications_copy from "../notifications/copy.js";
 import type * as notifications_providers_emailProvider from "../notifications/providers/emailProvider.js";
 import type * as notifications_pushSubscriptions from "../notifications/pushSubscriptions.js";
 import type * as notifications_templates from "../notifications/templates.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/reminders": typeof jobs_reminders;
   "leaderboard/index": typeof leaderboard_index;
   "notifications/actions": typeof notifications_actions;
+  "notifications/copy": typeof notifications_copy;
   "notifications/providers/emailProvider": typeof notifications_providers_emailProvider;
   "notifications/pushSubscriptions": typeof notifications_pushSubscriptions;
   "notifications/templates": typeof notifications_templates;

@@ -2,6 +2,7 @@
 import { internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
+import { getReminderMessage } from "../notifications/copy";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -82,6 +83,13 @@ export const sendHabitReminder = internalAction({
 
     // 3. Send email only if habit isn't completed today
     if (!status.isCompleted) {
+      const pushBody = getReminderMessage({
+        title: status.title,
+        category: status.category,
+        reminderTime: status.reminderTime,
+        userName: status.userName,
+      });
+
       await Promise.allSettled([
         ctx.runAction(
           internal.notifications.actions.sendHabitReminderNotification,
@@ -92,12 +100,12 @@ export const sendHabitReminder = internalAction({
             habitTitle: status.title,
             category: status.category,
             reminderTime: status.reminderTime,
-          },
+          }
         ),
         ctx.runAction(internal.notifications.webPush.sendPushToUser, {
           userId: status.userId,
           title: `⏰ ${status.title}`,
-          body: `Scheduled for ${status.reminderTime} (${status.category}). Tap to keep your streak alive!`,
+          body: pushBody,
           url: "/",
           tag: `habit-${args.habitId}`,
         }),
