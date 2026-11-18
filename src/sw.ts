@@ -46,24 +46,37 @@ self.addEventListener("push", (event) => {
 
 // 2. Notification Tap Listener (Opens or focuses Habit Pulse PWA)
 self.addEventListener("notificationclick", (event) => {
+  const targetPath = (event.notification.data?.url as string) || "/";
+  const fullTargetUrl = new URL(targetPath, self.location.origin).href;
+
   event.notification.close();
-  const targetUrl = (event.notification.data?.url as string) || "/";
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        // Focus existing open tab/PWA window if available
-        for (const client of windowClients) {
-          if ("focus" in client) {
-            client.navigate(targetUrl);
-            return client.focus();
+    (async () => {
+      const windowClients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      // 1. Try focusing an active, unfrozen Habit Pulse window
+      for (const client of windowClients) {
+        if (client.url.startsWith(self.location.origin) && "focus" in client) {
+          try {
+            if ("navigate" in client && client.url !== fullTargetUrl) {
+              await client.navigate(fullTargetUrl);
+            }
+            const focusedClient = await client.focus();
+            if (focusedClient) return;
+          } catch {
+            // If client was frozen/discarded by mobile OS, fall through to openWindow
           }
         }
-        // Otherwise open a fresh PWA window
-        if (self.clients.openWindow) {
-          return self.clients.openWindow(targetUrl);
-        }
-      })
+      }
+
+      // 2. Cold start or frozen client fallback: open PWA window directly
+      if (self.clients.openWindow) {
+        await self.clients.openWindow(fullTargetUrl);
+      }
+    })()
   );
 });
