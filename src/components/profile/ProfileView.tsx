@@ -9,10 +9,24 @@ import { NeuInput } from "../ui/NeuInput";
 import { UserAvatar } from "../ui/UserAvatar";
 import { useToast } from "../../context/ToastContext";
 import { parseConvexError } from "../../lib/errorUtils";
-import { Camera, ArrowLeft, Lock, Check, BellRing, Mail, Share2 } from "lucide-react";
+import {
+  Camera,
+  ArrowLeft,
+  Lock,
+  Check,
+  BellRing,
+  Mail,
+  Share2,
+  Volume2,
+} from "lucide-react";
 import { ConfirmActionModal } from "../ui/ConfirmActionModal";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { SettingToggleCard } from "../ui/SettingToggleCard";
+import {
+  isSoundEnabled,
+  setSoundEnabled,
+  soundFX,
+} from "../../lib/soundEffects";
 
 interface ProfileViewProps {
   user: {
@@ -36,6 +50,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [soundOn, setSoundOn] = useState(() => isSoundEnabled());
+
+  const handleToggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+    if (next) soundFX.checkHabit(); // Instant audio preview on enable!
+  };
 
   const generateUploadUrl = useMutation(api.storage.index.generateUploadUrl);
   const updateProfile = useMutation(api.auth.index.updateProfile);
@@ -264,6 +287,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               checked={isPushEnabled}
               disabled={!isPushSupported || isPushLoading}
               onChange={handleTogglePush}
+            />
+
+            <SettingToggleCard
+              icon={Volume2}
+              title="Interactive Sound Effects"
+              description="Play subtle tactile sounds when adding, completing, or unlocking streak milestones."
+              checked={soundOn}
+              onChange={handleToggleSound}
             />
           </div>
 

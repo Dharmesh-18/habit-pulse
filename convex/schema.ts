@@ -34,6 +34,7 @@ export default defineSchema({
     category: v.string(), // Health, Study, Work, etc.
     reminderTime: v.optional(v.string()), // "HH:mm" 24h
     customImageStorageId: v.optional(v.id("_storage")), // custom icon
+    longestStreak: v.optional(v.number()), // Best streak achieved on this habit
     version: v.number(), // Optimistic Concurrency Control (OCC)
     isArchived: v.boolean(),
     createdAt: v.number(),
@@ -71,4 +72,15 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_endpoint", ["endpoint"]),
+
+  // Permanent habit streak milestone achievements
+  habitAchievements: defineTable({
+    userId: v.id("users"),
+    habitId: v.id("habits"),
+    milestone: v.number(), // 1, 3, 7, 14, 21, 30, 50, 100, 200, 365, 500, 1000
+    unlockedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_habit", ["habitId"])
+    .index("by_habit_milestone", ["habitId", "milestone"]),
 });

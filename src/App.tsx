@@ -9,12 +9,13 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { ProfileView } from "./components/profile/ProfileView";
 import { useToast } from "./context/ToastContext";
+import { AchievementsPage } from "./pages/AchievementsPage";
 
 export function App() {
   const toast = useToast();
   const navigate = useNavigate();
   const [token, setToken] = useState<string>(
-    () => localStorage.getItem("habit_token") || ""
+    () => localStorage.getItem("habit_token") || "",
   );
 
   const currentUser = useQuery(api.auth.index.getMe, {
@@ -50,6 +51,7 @@ export function App() {
         }
       >
         <Route path="/" element={<DashboardPage sessionToken={token} />} />
+        <Route path="/achievements" element={<AchievementsPage sessionToken={token} />} />
         <Route
           path="/leaderboard"
           element={<LeaderboardPage sessionToken={token} />}

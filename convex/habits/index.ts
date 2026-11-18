@@ -4,6 +4,7 @@ import { v, ConvexError } from "convex/values";
 import { authenticate } from "../common/auth";
 import { assertRateLimit } from "../common/rateLimiter";
 import { internal } from "../_generated/api";
+import { calculateStreakStats, unlockEligibleMilestones } from "../achievements/helpers";
 
 // 1. QUERY: Get Habits with Last 30 Days Heatmap Logs
 export const listWithLogs = query({
@@ -216,7 +217,7 @@ export const updateWithVersionCheck = mutation({
   },
 });
 
-// 4. MUTATION: Toggle Completion Log (Idempotent)
+// 4. MUTATION: Mark Habit Completed for Date (One-Way Immutable Lock + Streak/Milestone Check)
 export const toggleToday = mutation({
   args: {
     sessionToken: v.string(),
@@ -228,13 +229,14 @@ export const toggleToday = mutation({
 
     await assertRateLimit(ctx, {
       key: `toggle_habit:${user.userId}`,
-      maxRequests: 15,
+      maxRequests: 30,
       windowMs: 60 * 1000,
     });
 
     const habit = await ctx.db.get(args.habitId);
-    if (!habit || habit.userId !== user.userId || habit.isArchived)
+    if (!habit || habit.userId !== user.userId || habit.isArchived) {
       throw new ConvexError("Unauthorized");
+    }
 
     const existingLog = await ctx.db
       .query("habitLogs")
@@ -243,13 +245,22 @@ export const toggleToday = mutation({
       )
       .first();
 
+    // One-way lock: if already completed, prevent unchecking
+    if (existingLog?.completed) {
+      return {
+        completed: true,
+        alreadyCompleted: true,
+        currentStreak: 0,
+        longestStreak: habit.longestStreak ?? 0,
+        newlyUnlockedMilestones: [] as number[],
+      };
+    }
+
     if (existingLog) {
-      const nextStatus = !existingLog.completed;
       await ctx.db.patch(existingLog._id, {
-        completed: nextStatus,
+        completed: true,
         timestamp: Date.now(),
       });
-      return nextStatus;
     } else {
       await ctx.db.insert("habitLogs", {
         habitId: args.habitId,
@@ -258,8 +269,41 @@ export const toggleToday = mutation({
         completed: true,
         timestamp: Date.now(),
       });
-      return true;
     }
+
+    // Recompute streak stats for this habit
+    const habitLogs = await ctx.db
+      .query("habitLogs")
+      .withIndex("by_habit_date", (q) => q.eq("habitId", args.habitId))
+      .collect();
+
+    const completedDates = habitLogs
+      .filter((l) => l.completed)
+      .map((l) => l.date);
+
+    const { currentStreak, longestStreak } = calculateStreakStats(
+      completedDates,
+      args.date,
+    );
+
+    const nextLongest = Math.max(habit.longestStreak ?? 0, longestStreak);
+    if (nextLongest !== (habit.longestStreak ?? 0)) {
+      await ctx.db.patch(habit._id, { longestStreak: nextLongest });
+    }
+
+    const newlyUnlockedMilestones = await unlockEligibleMilestones(ctx, {
+      userId: user.userId,
+      habitId: habit._id,
+      streakToCheck: currentStreak,
+    });
+
+    return {
+      completed: true,
+      alreadyCompleted: false,
+      currentStreak,
+      longestStreak: nextLongest,
+      newlyUnlockedMilestones,
+    };
   },
 });
 

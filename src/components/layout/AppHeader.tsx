@@ -8,7 +8,7 @@ import { UserAvatar } from "../ui/UserAvatar";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
 import type { Id } from "../../../convex/_generated/dataModel";
 
-export type AppView = "dashboard" | "leaderboard" | "profile";
+export type AppView = "dashboard" | "achievements" | "leaderboard" | "profile";
 
 interface AppHeaderProps {
   userName: string;

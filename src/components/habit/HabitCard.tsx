@@ -21,7 +21,15 @@ interface HabitCardProps {
     customImageStorageId?: Id<"_storage">;
     logs: Record<string, boolean>;
   };
-  onToggleToday: (id: string, date: string) => Promise<void>;
+
+onToggleToday: (
+    id: string,
+    date: string,
+  ) => Promise<{
+    completed?: boolean;
+    newlyUnlockedMilestones?: number[];
+  } | void>;
+
   onUpdate: (
     id: string,
     title: string,
@@ -96,6 +104,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           {/* Tactile Completion Toggle Button */}
           <button
             type="button"
+            
             onClick={() => onToggleToday(habit._id, todayKey)}
             title={
               isDoneToday

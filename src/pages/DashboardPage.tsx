@@ -1,6 +1,7 @@
 // src/pages/DashboardPage.tsx
 import React from "react";
 import { useQuery, useMutation } from "convex/react";
+import confetti from "canvas-confetti";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { NeuCard } from "../components/ui/NeuCard";
@@ -9,6 +10,8 @@ import { HabitMatrix, type HabitItem } from "../components/habit/HabitMatrix";
 import { ConsistencyGraphCard } from "../components/habit/ConsistencyGraphCard";
 import { useToast } from "../context/ToastContext";
 import { parseConvexError } from "../lib/errorUtils";
+import { getMilestoneMeta } from "../lib/achievements";
+import { soundFX } from "../lib/soundEffects";
 
 interface DashboardPageProps {
   sessionToken: string;
@@ -24,7 +27,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     sessionToken ? { sessionToken } : "skip"
   );
 
-  // ⚡ 0ms Optimistic UI Update wired directly into Convex's local query cache
+  // ⚡ 0ms One-Way Optimistic UI Update
   const toggleTodayMutation = useMutation(
     api.habits.index.toggleToday
   ).withOptimisticUpdate((localStore, args) => {
@@ -36,12 +39,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       const updatedHabits = currentHabits.map((habit) => {
         if (habit._id !== args.habitId) return habit;
 
-        const currentlyCompleted = Boolean(habit.logs?.[args.date]);
         return {
           ...habit,
           logs: {
             ...habit.logs,
-            [args.date]: !currentlyCompleted,
+            [args.date]: true,
           },
         };
       });
@@ -62,22 +64,42 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const handleToggleDate = async (id: string, date: string) => {
     if (!habits) return;
     const targetHabit = habits.find((h) => h._id === id);
-    const willBeDone = !Boolean(targetHabit?.logs?.[date]);
+
+    // One-way guard: already completed habits cannot be unchecked
+    if (targetHabit?.logs?.[date]) {
+      return;
+    }
 
     try {
-      await toggleTodayMutation({
+      const result = await toggleTodayMutation({
         sessionToken,
         habitId: id as Id<"habits">,
         date,
       });
+      soundFX.checkHabit();
 
-      if (willBeDone) {
-        toast.success(`Marked "${targetHabit?.title}" done (${date})`);
+      const unlocked = result?.newlyUnlockedMilestones ?? [];
+      if (unlocked.length > 0) {
+        const highestMilestone = unlocked[unlocked.length - 1];
+        const meta = getMilestoneMeta(highestMilestone);
+
+        soundFX.achievementUnlock();
+
+        confetti({
+          particleCount: 90,
+          spread: 75,
+          origin: { y: 0.65 },
+        });
+
+        toast.success(
+          `🎉 ${highestMilestone}-Day Streak Unlocked: "${meta.title}"! View in Achievements.`
+        );
       } else {
-        toast.info(`Unmarked "${targetHabit?.title}" (${date})`);
+        toast.success(`Marked "${targetHabit?.title}" done (${date})`);
       }
+
+      return result;
     } catch (err: unknown) {
-      // Note: Convex automatically rolls back the optimistic checkbox state on error!
       toast.error(parseConvexError(err));
     }
   };
@@ -108,6 +130,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       sessionToken,
       habitId: id as Id<"habits">,
     });
+    soundFX.deleteHabit();
     toast.success(`Habit "${targetHabit?.title}" deleted`);
   };
 

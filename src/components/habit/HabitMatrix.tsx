@@ -37,7 +37,7 @@ export interface HabitItem {
 
 interface HabitMatrixProps {
   habits: HabitItem[];
-  onToggleDate: (habitId: string, date: string) => Promise<void>;
+  onToggleDate: (habitId: string, date: string) => Promise<unknown>;
   onUpdate: (
     habitId: string,
     title: string,
@@ -389,7 +389,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                           )}
                         >
                           <button
-                            disabled={!day.isToday}
+                            disabled={!day.isToday || isDone}
                             type="button"
                             onClick={() => onToggleDate(habit._id, day.dateStr)}
                             title={

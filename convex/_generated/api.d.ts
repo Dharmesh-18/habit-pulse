@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as achievements_helpers from "../achievements/helpers.js";
+import type * as achievements_index from "../achievements/index.js";
 import type * as auth_index from "../auth/index.js";
 import type * as auth_oauth from "../auth/oauth.js";
 import type * as auth_oauthTypes from "../auth/oauthTypes.js";
@@ -33,6 +35,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "achievements/helpers": typeof achievements_helpers;
+  "achievements/index": typeof achievements_index;
   "auth/index": typeof auth_index;
   "auth/oauth": typeof auth_oauth;
   "auth/oauthTypes": typeof auth_oauthTypes;

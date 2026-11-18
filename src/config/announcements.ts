@@ -17,14 +17,14 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-18-web-push-notifications",
+  id: "2026-11-18-streak-achievements-v2",
   badge: "NEW",
-  title: "Lock-Screen Push Reminders",
+  title: "Streak Achievements & Shareable Badges",
   description:
-    "Never miss a habit! Enable Device Push Notifications in your Profile to get native alerts even when the app is closed.",
+    "Unlock & Share Streak Medals (1 to 1,000 days), share CARDS on WhatsApp/Instagram!",
   action: {
-    label: "Enable in Profile",
-    targetView: "profile",
+    label: "View Achievements",
+    targetView: "achievements",
   },
   isActive: true,
 };

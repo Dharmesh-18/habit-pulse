@@ -10,6 +10,7 @@ import { NeuCategorySelect } from "../ui/NeuCategorySelect";
 import { PlusCircle, ImagePlus } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { parseConvexError } from "../../lib/errorUtils";
+import { soundFX } from "../../lib/soundEffects";
 
 interface CreateHabitCardProps {
   sessionToken: string;
@@ -62,6 +63,8 @@ export const CreateHabitCard: React.FC<CreateHabitCardProps> = ({
         timezoneOffset: new Date().getTimezoneOffset(),
         customImageStorageId,
       });
+
+      soundFX.addHabit();
 
       toast.success(`Habit "${currentName}" created!`);
       setHabitTitle("");
