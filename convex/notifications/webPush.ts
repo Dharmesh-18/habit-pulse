@@ -59,7 +59,10 @@ export const sendPushToUser = internalAction({
                 auth: sub.auth,
               },
             },
-            payload
+            payload, {
+                TTL: 60 * 60, // 1 hour tak FCM retry karega agar device offline ho
+                urgency: "high", // Android Doze mode bypass karke instant delivery ke liye
+            }
           );
         } catch (err: unknown) {
           const statusCode = (err as { statusCode?: number })?.statusCode;
