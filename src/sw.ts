@@ -34,7 +34,7 @@ self.addEventListener("push", (event) => {
   const options: NotificationOptions = {
     body: data.body ?? "Time to complete your habit!",
     icon: "/pwa-192x192.png",
-    badge: "/pwa-192x192.png",
+    badge: "/badge-96x96.png",
     tag: data.tag ?? "habit-pulse-reminder",
     data: {
       url: data.url ?? "/",

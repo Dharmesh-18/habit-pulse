@@ -9,11 +9,10 @@ import { NeuInput } from "../ui/NeuInput";
 import { UserAvatar } from "../ui/UserAvatar";
 import { useToast } from "../../context/ToastContext";
 import { parseConvexError } from "../../lib/errorUtils";
-import { Camera, ArrowLeft, Lock, Check } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { Camera, ArrowLeft, Lock, Check, BellRing, Mail, Share2 } from "lucide-react";
 import { ConfirmActionModal } from "../ui/ConfirmActionModal";
-import { BellRing } from "lucide-react";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
+import { SettingToggleCard } from "../ui/SettingToggleCard";
 
 interface ProfileViewProps {
   user: {
@@ -40,7 +39,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const generateUploadUrl = useMutation(api.storage.index.generateUploadUrl);
   const updateProfile = useMutation(api.auth.index.updateProfile);
-
   const updateNotificationPref = useMutation(
     api.auth.index.updateNotificationPreference,
   );
@@ -84,14 +82,38 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       });
       toast.success(
         pendingToggle
-          ? "Notifications turned ON."
-          : "Notifications turned OFF.",
+          ? "Email reminders turned ON."
+          : "Email reminders turned OFF.",
       );
       setPendingToggle(null);
     } catch (err: unknown) {
       toast.error(parseConvexError(err));
     } finally {
       setIsUpdatingPref(false);
+    }
+  };
+
+  const handleShareApp = async () => {
+    const shareUrl = window.location.origin;
+    const shareData = {
+      title: "Habit Pulse",
+      text: "Build unbreakable daily streaks with Habit Pulse! Check it out:",
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("App link copied to clipboard!");
+      }
+    } catch (err: unknown) {
+      // Ignore user cancelling the native share sheet
+      if (err instanceof Error && err.name !== "AbortError") {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("App link copied to clipboard!");
+      }
     }
   };
 
@@ -114,7 +136,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       setIsSaving(true);
       let newStorageId: Id<"_storage"> | undefined = undefined;
 
-      // 1. If user picked a new picture, upload to Convex Storage
       if (selectedFile) {
         const postUrl = await generateUploadUrl({ sessionToken });
         const res = await fetch(postUrl, {
@@ -126,7 +147,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         newStorageId = uploadResult.storageId;
       }
 
-      // 2. Save profile changes
       await updateProfile({
         sessionToken,
         name: name.trim(),
@@ -141,6 +161,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       setIsSaving(false);
     }
   };
+
+  const pushDescription = !isPushSupported
+    ? "On iPhone/iPad, tap Share → Add to Home Screen first to enable push reminders."
+    : pushPermission === "denied"
+      ? "Blocked in browser settings. Enable notifications for this site to receive alerts."
+      : "Receive native lock-screen reminders on this device even when the app is closed.";
 
   return (
     <div className="max-w-xl mx-auto w-full flex flex-col gap-6">
@@ -199,7 +225,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
           {/* Form Fields */}
           <div className="flex flex-col gap-4">
-            {/* Non-editable Email */}
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-xs font-semibold text-neu-muted tracking-wide uppercase px-1 flex items-center gap-1.5">
                 <Lock className="w-3 h-3 text-neu-muted" />
@@ -213,7 +238,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               />
             </div>
 
-            {/* Editable Name */}
             <NeuInput
               label="Display Name"
               value={name}
@@ -223,80 +247,46 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between gap-4 pt-3 border-t border-black/5">
-            <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isNotificationsEnabled}
-                onClick={() => setPendingToggle(!isNotificationsEnabled)}
-                className={cn(
-                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-all duration-200 shadow-neu-pressed-sm focus:outline-none",
-                  isNotificationsEnabled ? "bg-neu-accent/25" : "bg-neu-bg",
-                )}
-              >
-                <span
-                  className={cn(
-                    "pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-neu-flat-sm transition-transform duration-200",
-                    isNotificationsEnabled
-                      ? "translate-x-5 bg-neu-accent"
-                      : "translate-x-0 bg-neu-muted/60",
-                  )}
-                />
-              </button>
-              <span className="text-xs font-semibold text-neu-dark select-none">
-                Notifications {isNotificationsEnabled ? "On" : "Off"}
-              </span>
-            </div>
+          {/* Notification Preferences */}
+          <div className="space-y-3 pt-4 border-t border-black/5">
+            <SettingToggleCard
+              icon={Mail}
+              title="Email Reminders"
+              description="Receive scheduled habit reminders and streak updates in your inbox."
+              checked={isNotificationsEnabled}
+              onChange={() => setPendingToggle(!isNotificationsEnabled)}
+            />
+
+            <SettingToggleCard
+              icon={BellRing}
+              title="Device Push Notifications"
+              description={pushDescription}
+              checked={isPushEnabled}
+              disabled={!isPushSupported || isPushLoading}
+              onChange={handleTogglePush}
+            />
+          </div>
+
+          {/* Save & Share Actions */}
+          <div className="flex items-center justify-between w-full gap-3">
+            <NeuButton
+              type="button"
+              onClick={handleShareApp}
+              className="flex items-center gap-1.5 justify-center"
+            >
+              <Share2 className="w-4 h-4 text-neu-accent" />
+              <span>Share App</span>
+            </NeuButton>
 
             <NeuButton
               type="submit"
               variant="primary"
               disabled={isSaving}
-              className="flex items-center gap-1.5 min-w-[120px] justify-center"
+              className="flex items-center gap-1.5 min-w-[140px] justify-center"
             >
               <Check className="w-4 h-4" />
               <span>{isSaving ? "Saving..." : "Save Changes"}</span>
             </NeuButton>
-          </div>
-
-          {/* Device Push Notifications Card */}
-          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-neu-bg shadow-neu-pressed-sm">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-neu-bg shadow-neu-flat flex items-center justify-center text-neu-accent shrink-0 mt-0.5">
-                <BellRing className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-neu-dark">
-                  Device Push Notifications
-                </p>
-                <p className="text-xs text-neu-muted mt-0.5 leading-relaxed">
-                  {!isPushSupported
-                    ? "On iPhone/iPad, tap Share → Add to Home Screen first to enable push reminders."
-                    : pushPermission === "denied"
-                      ? "Blocked in browser settings. Enable notifications for this site to receive alerts."
-                      : "Receive native lock-screen reminders on this device even when the app is closed."}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isPushEnabled}
-              disabled={!isPushSupported || isPushLoading}
-              onClick={handleTogglePush}
-              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 p-1 shadow-neu-pressed-sm disabled:opacity-40 disabled:cursor-not-allowed ${
-                isPushEnabled ? "bg-neu-accent" : "bg-neu-bg"
-              }`}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                  isPushEnabled ? "translate-x-5" : "translate-x-0"
-                }`}
-              />
-            </button>
           </div>
         </form>
       </NeuCard>
@@ -307,13 +297,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         variant={pendingToggle === false ? "danger" : "primary"}
         title={
           pendingToggle === false
-            ? "Turn off notifications?"
-            : "Turn on notifications?"
+            ? "Turn off email reminders?"
+            : "Turn on email reminders?"
         }
         description={
           pendingToggle === false
-            ? "Do you want to stop receiving notifications from Habit Pulse? You won't receive habit creation alerts or daily reminders until you turn this back on."
-            : "Do you want to start receiving notifications from Habit Pulse again?"
+            ? "Do you want to stop receiving email notifications from Habit Pulse? You won't receive habit creation alerts or daily email reminders until you turn this back on."
+            : "Do you want to start receiving email notifications from Habit Pulse again?"
         }
         confirmLabel={
           pendingToggle === false ? "Yes, Turn Off" : "Yes, Turn On"
