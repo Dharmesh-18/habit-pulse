@@ -29,7 +29,6 @@ export const ProtectedShell: React.FC<ProtectedShellProps> = ({
         <AppHeader
           userName={userName}
           avatarStorageId={avatarStorageId}
-          onLogout={onLogout}
         />
 
         <div className="max-w-6xl w-full mx-auto px-3.5 sm:px-6 pt-5 sm:pt-7 pb-24 md:pb-10 flex flex-col md:flex-row gap-6">
@@ -37,7 +36,7 @@ export const ProtectedShell: React.FC<ProtectedShellProps> = ({
 
           <div className="flex-1 min-w-0 flex flex-col gap-6">
             {isDashboard && <FeatureBanner />}
-            <Outlet />
+            <Outlet context={{ onLogout }}/>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 // src/components/layout/AppHeader.tsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Flame, LogOut, Download } from "lucide-react";
+import { Flame, Download } from "lucide-react";
 import { NeuButton } from "../ui/NeuButton";
 import { NeuThemeSelect } from "../ui/NeuThemeSelect";
 import { UserAvatar } from "../ui/UserAvatar";
@@ -13,13 +13,11 @@ export type AppView = "dashboard" | "achievements" | "leaderboard" | "profile";
 interface AppHeaderProps {
   userName: string;
   avatarStorageId?: Id<"_storage">;
-  onLogout: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
   userName,
   avatarStorageId,
-  onLogout,
 }) => {
   const { canInstall, promptInstall } = usePWAInstall();
   const navigate = useNavigate();
@@ -74,16 +72,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             onClick={() => navigate(isProfile ? "/" : "/profile")}
             className={isProfile ? "ring-2 ring-neu-accent" : ""}
           />
-
-          <NeuButton
-            size="sm"
-            onClick={onLogout}
-            title="Logout"
-            className="flex items-center gap-1.5 px-2.5 sm:px-3"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Exit</span>
-          </NeuButton>
         </div>
       </div>
     </header>

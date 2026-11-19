@@ -63,6 +63,8 @@ export function App() {
               user={currentUser}
               sessionToken={token}
               onBack={() => navigate("/")}
+              onLogout={handleLogout}
+
             />
           }
         />

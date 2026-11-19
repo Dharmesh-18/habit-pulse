@@ -18,6 +18,7 @@ import {
   Mail,
   Share2,
   Volume2,
+  LogOut
 } from "lucide-react";
 import { ConfirmActionModal } from "../ui/ConfirmActionModal";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
@@ -38,18 +39,21 @@ interface ProfileViewProps {
   };
   sessionToken: string;
   onBack: () => void;
+  onLogout: () => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   user,
   sessionToken,
   onBack,
+  onLogout,
 }) => {
   const toast = useToast();
   const [name, setName] = useState(user.name);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [soundOn, setSoundOn] = useState(() => isSoundEnabled());
 
@@ -320,8 +324,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </NeuButton>
           </div>
         </form>
+
+        {/* Session Actions — Bottom Full-Width Logout */}
+        <div className="pt-4 border-t border-black/5">
+          <NeuButton
+            type="button"
+            variant="danger"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full py-3 flex items-center justify-center gap-2 font-semibold"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Log Out</span>
+          </NeuButton>
+        </div>
       </NeuCard>
 
+      {/* Email Reminder Confirmation Modal */}
       <ConfirmActionModal
         isOpen={pendingToggle !== null}
         isTurningOff={pendingToggle === false}
@@ -342,6 +360,21 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         isLoading={isUpdatingPref}
         onConfirm={handleConfirmToggle}
         onCancel={() => setPendingToggle(null)}
+      />
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={showLogoutConfirm}
+        isTurningOff
+        variant="danger"
+        title="Log out of Habit Pulse?"
+        description="You will need to sign in again with your email to access your habits and streaks on this device."
+        confirmLabel="Yes, Log Out"
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          onLogout();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
       />
     </div>
   );

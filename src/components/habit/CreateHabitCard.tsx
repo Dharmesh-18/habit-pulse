@@ -11,6 +11,7 @@ import { PlusCircle, ImagePlus } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { parseConvexError } from "../../lib/errorUtils";
 import { soundFX } from "../../lib/soundEffects";
+import { NeuTimePicker } from "../ui/NeuTimePicker";
 
 interface CreateHabitCardProps {
   sessionToken: string;
@@ -42,10 +43,26 @@ export const CreateHabitCard: React.FC<CreateHabitCardProps> = ({
     return storageId;
   };
 
+  const MIN_HABIT_NAME_LENGTH = 3;
+  const MAX_HABIT_NAME_LENGTH = 30;
+
   const handleCreateHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     const currentName = habitTitle.trim();
-    if (!currentName) return;
+
+    if (currentName.length < MIN_HABIT_NAME_LENGTH) {
+      toast.error(
+        `Habit name must be at least ${MIN_HABIT_NAME_LENGTH} characters long.`,
+      );
+      return;
+    }
+
+    if (currentName.length > MAX_HABIT_NAME_LENGTH) {
+      toast.error(
+        `Habit name cannot exceed ${MAX_HABIT_NAME_LENGTH} characters.`,
+      );
+      return;
+    }
 
     try {
       setIsUploading(true);
@@ -95,12 +112,7 @@ export const CreateHabitCard: React.FC<CreateHabitCardProps> = ({
           </div>
 
           <div className="col-span-1 md:col-span-3">
-            <NeuInput
-              label="Reminder"
-              type="time"
-              value={reminderTime}
-              onChange={(e) => setReminderTime(e.target.value)}
-            />
+            <NeuTimePicker value={reminderTime} onChange={setReminderTime} />
           </div>
 
           <div className="col-span-2 md:col-span-2">

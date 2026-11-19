@@ -67,6 +67,14 @@ export const create = mutation({
 
     const normalizedTitle = args.title.trim().toLowerCase();
 
+    // Length validation
+    if (normalizedTitle.length < 3) {
+      throw new Error("Habit name must be at least 3 characters long.");
+    }
+    if (normalizedTitle.length > 30) {
+      throw new Error("Habit name cannot exceed 30 characters.");
+    }
+
     // DEDUPLICATION CHECK
     const existingActive = await ctx.db
       .query("habits")
