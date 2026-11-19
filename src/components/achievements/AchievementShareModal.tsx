@@ -38,7 +38,15 @@ export const AchievementShareModal: React.FC<AchievementShareModalProps> = ({
     { month: "short", day: "numeric", year: "numeric" },
   );
 
-  const generatePngFile = async (): Promise<{ dataUrl: string; file: File }> => {
+  const appUrl =
+  typeof window !== "undefined" && window.location.origin
+    ? window.location.origin
+    : "https://habit-pulse-d18.netlify.app";
+
+  const generatePngFile = async (): Promise<{
+    dataUrl: string;
+    file: File;
+  }> => {
     if (!cardRef.current) throw new Error("Card not ready");
     const dataUrl = await toPng(cardRef.current, {
       cacheBust: true,
@@ -66,7 +74,7 @@ export const AchievementShareModal: React.FC<AchievementShareModalProps> = ({
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: `${meta.title} — Habit Pulse`,
-          text: `🔥 I just hit a ${achievement.milestone}-day streak on "${achievement.habitTitle}" using Habit Pulse!`,
+          text: `🔥 I just hit a ${achievement.milestone}-day streak on "${achievement.habitTitle}" using Habit Pulse! Start your streaks on ${appUrl}`,
           files: [file],
         });
       } else {
@@ -145,7 +153,11 @@ export const AchievementShareModal: React.FC<AchievementShareModalProps> = ({
 
           {/* Large Medallion */}
           <div className="relative my-1">
-            <BadgeArtwork milestone={achievement.milestone} unlocked size="lg" />
+            <BadgeArtwork
+              milestone={achievement.milestone}
+              unlocked
+              size="lg"
+            />
           </div>
 
           {/* Achievement Copy */}
