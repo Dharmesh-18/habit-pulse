@@ -5,6 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================
+1. BASE LAYER & GLOBAL TYPOGRAPHY
+   ========================================================= */
 @layer base {
   body {
     background-color: var(--theme-bg);
@@ -16,44 +19,195 @@
   }
 }
 
-/* Global Surface & Glassmorphism Support */
+/* =========================================================
+2. GLOBAL SURFACE & GLASSMORPHISM SUPPORT
+   ========================================================= */
 .bg-neu-bg {
   background-color: var(--theme-surface);
   backdrop-filter: blur(var(--theme-backdrop-blur));
   -webkit-backdrop-filter: blur(var(--theme-backdrop-blur));
 }
 
-/* Space Theme Shiny Rim & Interactive Specular Sweep (NO position override) */
+/* =========================================================
+3. TRANSLUCENT & COLLECTOR CARD RIM BORDERS
+   ========================================================= */
 [data-theme="space"] .shadow-neu-flat,
 [data-theme="space"] .shadow-neu-flat-sm,
-[data-theme="space"] .shadow-neu-flat-lg {
+[data-theme="space"] .shadow-neu-flat-lg,
+[data-theme="arc-reactor"] .shadow-neu-flat,
+[data-theme="arc-reactor"] .shadow-neu-flat-sm,
+[data-theme="arc-reactor"] .shadow-neu-flat-lg,
+[data-theme="obsidian-gold"] .shadow-neu-flat,
+[data-theme="obsidian-gold"] .shadow-neu-flat-sm,
+[data-theme="obsidian-gold"] .shadow-neu-flat-lg,
+[data-theme="phoenix-force"] .shadow-neu-flat,
+[data-theme="phoenix-force"] .shadow-neu-flat-sm,
+[data-theme="phoenix-force"] .shadow-neu-flat-lg,
+[data-theme="singularity"] .shadow-neu-flat,
+[data-theme="singularity"] .shadow-neu-flat-sm,
+[data-theme="singularity"] .shadow-neu-flat-lg {
   border: 1px solid var(--theme-border);
 }
 
+/* =========================================================
+4. THEME-SPECIFIC INTERACTIVE & COMIC EFFECTS
+   ========================================================= */
+
+/* Space — Cosmic Specular Hover */
 [data-theme="space"] button.shadow-neu-flat:hover,
 [data-theme="space"] button.shadow-neu-flat-sm:hover {
   border-color: rgba(255, 255, 255, 0.34);
   box-shadow: 0 8px 26px rgba(168, 85, 247, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
 }
 
-/* Sticky Table Cells in Space Theme */
+/* Arc Reactor — Holographic Cyan Hover */
+[data-theme="arc-reactor"] button.shadow-neu-flat:hover,
+[data-theme="arc-reactor"] button.shadow-neu-flat-sm:hover {
+  border-color: rgba(0, 216, 255, 0.55);
+  box-shadow: 0 0 18px rgba(0, 216, 255, 0.28), inset 0 1px 0 0 rgba(165, 243, 252, 0.4);
+}
+
+/* Royal Gold — 24K Metallic Hover Sheen */
+[data-theme="obsidian-gold"] button.shadow-neu-flat:hover,
+[data-theme="obsidian-gold"] button.shadow-neu-flat-sm:hover {
+  border-color: rgba(254, 240, 138, 0.65);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.34), inset 0 1px 0 0 rgba(254, 249, 195, 0.55);
+}
+
+/* Aether Sovereign (1000-Day Crown Theme) — Aurora Teal + Gold Dual Hover Aura */
+[data-theme="singularity"] button.shadow-neu-flat:hover,
+[data-theme="singularity"] button.shadow-neu-flat-sm:hover {
+  border-color: rgba(253, 224, 71, 0.72);
+  box-shadow:
+    0 0 22px rgba(45, 212, 191, 0.34),
+    0 0 12px rgba(251, 191, 36, 0.25),
+    inset 0 1px 0 0 rgba(254, 249, 195, 0.6);
+}
+
+/* Space Alien (Xenomorph) — Bold Comic-Book Ink Borders & Tactile Press */
+[data-theme="xenomorph"] .shadow-neu-flat,
+[data-theme="xenomorph"] .shadow-neu-flat-sm,
+[data-theme="xenomorph"] .shadow-neu-flat-lg,
+[data-theme="xenomorph"] .shadow-neu-pressed,
+[data-theme="xenomorph"] .shadow-neu-pressed-sm {
+  border: 1.5px solid #0c0d10;
+}
+
+[data-theme="xenomorph"] button.shadow-neu-flat:hover,
+[data-theme="xenomorph"] button.shadow-neu-flat-sm:hover {
+  border-color: rgba(250, 204, 21, 0.65);
+  transform: translate(-1px, -1px);
+}
+
+[data-theme="xenomorph"] button.shadow-neu-flat:active,
+[data-theme="xenomorph"] button.shadow-neu-flat-sm:active {
+  transform: translate(2px, 2px);
+}
+
+/* Celestial Prism — Rainbow Spectrum Rim, Hover & Opaque Sticky Column */
+[data-theme="celestial-prism"] .shadow-neu-flat,
+[data-theme="celestial-prism"] .shadow-neu-flat-sm,
+[data-theme="celestial-prism"] .shadow-neu-flat-lg {
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)),
+    linear-gradient(125deg, #f43f5e, #facc15, #10b981, #0ea5e9, #a855f7);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+[data-theme="celestial-prism"] button.shadow-neu-flat:hover,
+[data-theme="celestial-prism"] button.shadow-neu-flat-sm:hover {
+  box-shadow:
+    0 6px 18px rgba(236, 72, 153, 0.18),
+    0 4px 14px rgba(14, 165, 233, 0.16);
+}
+
+[data-theme="celestial-prism"] th.sticky,
+[data-theme="celestial-prism"] td.sticky {
+  background-color: #ffffff;
+}
+
+/* =========================================================
+5. OPAQUE STICKY MATRIX COLUMNS (Prevents Scroll Bleed)
+   ========================================================= */
 [data-theme="space"] th.sticky,
 [data-theme="space"] td.sticky {
   background-color: #111629;
 }
 
-/* Native time input padding & theme-aware clock icon */
+[data-theme="arc-reactor"] th.sticky,
+[data-theme="arc-reactor"] td.sticky {
+  background-color: #071322;
+}
+
+[data-theme="spidey-verse"] th.sticky,
+[data-theme="spidey-verse"] td.sticky {
+  background-color: #101933;
+}
+
+[data-theme="emerald-corps"] th.sticky,
+[data-theme="emerald-corps"] td.sticky {
+  background-color: #0a1e14;
+}
+
+[data-theme="xenomorph"] th.sticky,
+[data-theme="xenomorph"] td.sticky {
+  background-color: #272a30;
+}
+
+[data-theme="obsidian-gold"] th.sticky,
+[data-theme="obsidian-gold"] td.sticky {
+  background-color: #261b0e;
+}
+
+[data-theme="phoenix-force"] th.sticky,
+[data-theme="phoenix-force"] td.sticky {
+  background-color: #251611;
+}
+
+[data-theme="singularity"] th.sticky,
+[data-theme="singularity"] td.sticky {
+  background-color: #0c1322;
+}
+
+/* =========================================================
+6. NATIVE FORM CONTROLS & DARK COLOR-SCHEME
+   ========================================================= */
 input[type="time"] {
   padding-left: 0.75rem;
   padding-right: 0.65rem;
 }
 
 [data-theme="dark"] input[type="time"],
-[data-theme="space"] input[type="time"] {
+[data-theme="space"] input[type="time"],
+[data-theme="arc-reactor"] input[type="time"],
+[data-theme="spidey-verse"] input[type="time"],
+[data-theme="emerald-corps"] input[type="time"],
+[data-theme="xenomorph"] input[type="time"],
+[data-theme="obsidian-gold"] input[type="time"],
+[data-theme="phoenix-force"] input[type="time"],
+[data-theme="singularity"] input[type="time"] {
   color-scheme: dark;
 }
 
-/* Mobile PWA & Native Touch Ergonomics */
+/* =========================================================
+7. GPU AMBIENT ANIMATIONS & MOBILE PWA ERGONOMICS
+   ========================================================= */
+@keyframes ambientFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(18px, -14px, 0) scale(1.06);
+  }
+}
+
+.animate-ambient-float {
+  animation: ambientFloat 14s ease-in-out infinite;
+  will-change: transform;
+}
+
 html,
 body {
   min-height: 100dvh;

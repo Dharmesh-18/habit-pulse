@@ -100,3 +100,311 @@
     radial-gradient(circle at 82% 22%, rgba(56, 189, 248, 0.18) 0%, transparent 42%),
     radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.16) 0%, transparent 45%);
 }
+
+
+/* =========================================================
+5. ARC REACTOR — J.A.R.V.I.S. HUD Inspired (3-Day Streak Unlock)
+   Deep Pitch Abyssal Navy + Holographic Electric Cyan Glow
+   ========================================================= */
+[data-theme="arc-reactor"] {
+  --theme-bg: #040911;
+  --theme-surface: rgba(8, 22, 38, 0.74);
+  --theme-surface-elevated: rgba(11, 31, 54, 0.92);
+  --theme-text: #cffafe;
+  --theme-dark: #f0f9ff;
+  --theme-muted: #5ea8c4;
+  --theme-accent: #00d8ff;
+  --theme-accent-glow: rgba(0, 216, 255, 0.6);
+
+  /* Crisp HUD cyan rim + deep holographic shadow */
+  --theme-shadow-flat: 0 8px 28px rgba(0, 0, 0, 0.72), inset 0 1px 0 0 rgba(0, 216, 255, 0.28);
+  --theme-shadow-flat-sm: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(0, 216, 255, 0.24);
+  --theme-shadow-flat-lg: 0 14px 38px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(103, 232, 249, 0.42), 0 0 26px rgba(0, 216, 255, 0.24);
+  --theme-shadow-pressed: inset 0 2px 8px rgba(0, 0, 0, 0.82), inset 0 -1px 0 0 rgba(0, 216, 255, 0.16);
+  --theme-shadow-pressed-sm: inset 0 1px 5px rgba(0, 0, 0, 0.75), inset 0 -1px 0 0 rgba(0, 216, 255, 0.12);
+
+  --theme-border: rgba(0, 216, 255, 0.26);
+  --theme-backdrop-blur: 10px;
+  --theme-bg-pattern:
+    radial-gradient(circle at 22% 16%, rgba(0, 216, 255, 0.18) 0%, transparent 42%),
+    radial-gradient(circle at 80% 78%, rgba(14, 165, 233, 0.15) 0%, transparent 46%),
+    linear-gradient(rgba(0, 216, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 216, 255, 0.03) 1px, transparent 1px);
+  background-size: auto, auto, 32px 32px, 32px 32px;
+}
+
+/* =========================================================
+6. SPIDEY VERSE — Spider-Man Inspired (7-Day Streak Unlock)
+   Midnight Suit Navy + Electric Crimson Web Accents
+   ========================================================= */
+[data-theme="spidey-verse"] {
+  --theme-bg: #090e1c;
+  --theme-surface: rgba(17, 26, 51, 0.72);
+  --theme-surface-elevated: rgba(24, 37, 72, 0.88);
+  --theme-text: #dbe6ff;
+  --theme-dark: #ffffff;
+  --theme-muted: #8497c4;
+  --theme-accent: #e11d48;
+  --theme-accent-glow: rgba(225, 29, 72, 0.55);
+
+  --theme-shadow-flat: 0 8px 28px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(225, 29, 72, 0.26);
+  --theme-shadow-flat-sm: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(225, 29, 72, 0.2);
+  --theme-shadow-flat-lg: 0 14px 38px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(96, 165, 250, 0.32), 0 0 24px rgba(225, 29, 72, 0.22);
+  --theme-shadow-pressed: inset 0 2px 8px rgba(0, 0, 0, 0.72), inset 0 -1px 0 0 rgba(96, 165, 250, 0.14);
+  --theme-shadow-pressed-sm: inset 0 1px 5px rgba(0, 0, 0, 0.65), inset 0 -1px 0 0 rgba(96, 165, 250, 0.1);
+
+  --theme-border: rgba(225, 29, 72, 0.22);
+  --theme-backdrop-blur: 10px;
+  --theme-bg-pattern:
+    radial-gradient(circle at 82% 15%, rgba(225, 29, 72, 0.24) 0%, transparent 40%),
+    radial-gradient(circle at 18% 82%, rgba(37, 99, 235, 0.24) 0%, transparent 46%);
+}
+
+/* =========================================================
+7. EMERALD CORPS — Green Lantern Inspired (14-Day Streak Unlock)
+   Obsidian Sector Space + Willpower Neon Emerald Energy
+   ========================================================= */
+[data-theme="emerald-corps"] {
+  --theme-bg: #050f0a;
+  --theme-surface: rgba(11, 31, 21, 0.72);
+  --theme-surface-elevated: rgba(16, 44, 30, 0.88);
+  --theme-text: #d1fae5;
+  --theme-dark: #ffffff;
+  --theme-muted: #6ee7b7;
+  --theme-accent: #10b981;
+  --theme-accent-glow: rgba(16, 185, 129, 0.58);
+
+  --theme-shadow-flat: 0 8px 28px rgba(0, 0, 0, 0.62), inset 0 1px 0 0 rgba(52, 211, 153, 0.26);
+  --theme-shadow-flat-sm: 0 4px 14px rgba(0, 0, 0, 0.52), inset 0 1px 0 0 rgba(52, 211, 153, 0.2);
+  --theme-shadow-flat-lg: 0 14px 38px rgba(0, 0, 0, 0.72), inset 0 1px 1px 0 rgba(110, 231, 183, 0.35), 0 0 26px rgba(16, 185, 129, 0.26);
+  --theme-shadow-pressed: inset 0 2px 8px rgba(0, 0, 0, 0.74), inset 0 -1px 0 0 rgba(52, 211, 153, 0.14);
+  --theme-shadow-pressed-sm: inset 0 1px 5px rgba(0, 0, 0, 0.66), inset 0 -1px 0 0 rgba(52, 211, 153, 0.1);
+
+  --theme-border: rgba(16, 185, 129, 0.24);
+  --theme-backdrop-blur: 10px;
+  --theme-bg-pattern:
+    radial-gradient(circle at 50% 12%, rgba(16, 185, 129, 0.24) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(5, 150, 105, 0.18) 0%, transparent 42%);
+}
+
+/* =========================================================
+8. XENOMORPH — Space Alien Comic Edition (21-Day Streak Unlock)
+   Matte Charcoal & Moonstone Silver + Starlight Yellow Comic Ink
+   ========================================================= */
+[data-theme="xenomorph"] {
+  --theme-bg: #1c1e22;
+  --theme-surface: #272a30;
+  --theme-surface-elevated: #32363e;
+  --theme-text: #d1d5db;
+  --theme-dark: #f9fafb;
+  --theme-muted: #9ca3af;
+  --theme-accent: #facc15;
+  --theme-accent-glow: rgba(250, 204, 21, 0.45);
+
+  /* Crisp comic-book ink offset shadows + moonstone top edge */
+  --theme-shadow-flat: 4px 4px 0px #0c0d10, inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+  --theme-shadow-flat-sm: 2px 2px 0px #0c0d10, inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  --theme-shadow-flat-lg: 6px 6px 0px #090a0d, inset 0 1px 0 0 rgba(250, 204, 21, 0.25);
+  --theme-shadow-pressed: inset 3px 3px 0px #0c0d10, inset -1px -1px 0px rgba(255, 255, 255, 0.08);
+  --theme-shadow-pressed-sm: inset 2px 2px 0px #0c0d10, inset -1px -1px 0px rgba(255, 255, 255, 0.06);
+
+  --theme-border: #111317;
+  --theme-backdrop-blur: 0px;
+  /* Subtle starfield + comic halftone dots */
+  --theme-bg-pattern:
+    radial-gradient(rgba(250, 204, 21, 0.18) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 48px 48px, 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* =========================================================
+9. ROYAL GOLD — 24K Champagne Silk Luxury (30-Day Streak Unlock)
+   Warm Burnished Bronze-Gold + Radiant Champagne Silk Highlights
+   ========================================================= */
+[data-theme="obsidian-gold"] {
+  --theme-bg: #1c1309;
+  --theme-surface: rgba(46, 32, 16, 0.72);
+  --theme-surface-elevated: rgba(62, 43, 21, 0.9);
+  --theme-text: #fef3c7;
+  --theme-dark: #fffbeb;
+  --theme-muted: #d6b87c;
+  --theme-accent: #f59e0b;
+  --theme-accent-glow: rgba(245, 158, 11, 0.6);
+
+  /* Champagne gold specular top-rim + warm bronze depth shadow */
+  --theme-shadow-flat: 0 8px 28px rgba(14, 9, 3, 0.65), inset 0 1px 0 0 rgba(254, 240, 138, 0.42);
+  --theme-shadow-flat-sm: 0 4px 14px rgba(14, 9, 3, 0.55), inset 0 1px 0 0 rgba(254, 240, 138, 0.34);
+  --theme-shadow-flat-lg: 0 14px 38px rgba(14, 9, 3, 0.75), inset 0 1px 1px 0 rgba(254, 249, 195, 0.55), 0 0 28px rgba(245, 158, 11, 0.32);
+  --theme-shadow-pressed: inset 0 2px 8px rgba(14, 9, 3, 0.78), inset 0 -1px 0 0 rgba(254, 240, 138, 0.22);
+  --theme-shadow-pressed-sm: inset 0 1px 5px rgba(14, 9, 3, 0.7), inset 0 -1px 0 0 rgba(254, 240, 138, 0.16);
+
+  --theme-border: rgba(253, 224, 71, 0.32);
+  --theme-backdrop-blur: 12px;
+  /* Champagne silk radial sheen + subtle diagonal luxury light rays */
+  --theme-bg-pattern:
+    radial-gradient(ellipse at 50% 0%, rgba(253, 224, 71, 0.28) 0%, transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(217, 119, 6, 0.24) 0%, transparent 48%),
+    linear-gradient(135deg, rgba(254, 240, 138, 0.06) 0%, transparent 40%, rgba(245, 158, 11, 0.07) 75%, transparent 100%);
+}
+
+/* =========================================================
+10. SAKURA KYOTO — Cherry Blossom Ivory Neumorphism (100-Day Streak)
+    Soft Rose-Blush Silk + Crimson-Pink Blossom Accents
+   ========================================================= */
+[data-theme="vibranium"] {
+  --theme-bg: #f5ebef;
+  --theme-surface: #f5ebef;
+  --theme-surface-elevated: #fbf4f7;
+  --theme-text: #4a2534;
+  --theme-dark: #240c16;
+  --theme-muted: #8c5c70;
+  --theme-accent: #db2777;
+  --theme-accent-glow: rgba(219, 39, 119, 0.36);
+
+  --theme-shadow-flat: 6px 6px 14px #d9c5ce, -6px -6px 14px #ffffff;
+  --theme-shadow-flat-sm: 3px 3px 7px #d9c5ce, -3px -3px 7px #ffffff;
+  --theme-shadow-flat-lg: 10px 10px 22px #d1bac4, -10px -10px 22px #ffffff;
+  --theme-shadow-pressed: inset 4px 4px 8px #d9c5ce, inset -4px -4px 8px #ffffff;
+  --theme-shadow-pressed-sm: inset 2px 2px 4px #d9c5ce, inset -2px -2px 4px #ffffff;
+
+  --theme-border: rgba(255, 255, 255, 0.78);
+  --theme-backdrop-blur: 0px;
+  --theme-bg-pattern:
+    radial-gradient(circle at 18% 15%, rgba(244, 114, 182, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 85% 82%, rgba(219, 39, 119, 0.1) 0%, transparent 45%);
+}
+
+/* =========================================================
+11. TERRACOTTA DUSK — Desert Copper & Canyon Sunset (200-Day Streak)
+    Warm Espresso-Clay + Burnt Copper & Coral Ember
+   ========================================================= */
+[data-theme="phoenix-force"] {
+  --theme-bg: #1b110d;
+  --theme-surface: rgba(43, 27, 21, 0.76);
+  --theme-surface-elevated: rgba(58, 36, 28, 0.92);
+  --theme-text: #f5dcd0;
+  --theme-dark: #fff5f0;
+  --theme-muted: #c29582;
+  --theme-accent: #ea580c;
+  --theme-accent-glow: rgba(234, 88, 12, 0.58);
+
+  --theme-shadow-flat: 0 8px 28px rgba(10, 5, 3, 0.68), inset 0 1px 0 0 rgba(251, 146, 60, 0.3);
+  --theme-shadow-flat-sm: 0 4px 14px rgba(10, 5, 3, 0.56), inset 0 1px 0 0 rgba(251, 146, 60, 0.22);
+  --theme-shadow-flat-lg: 0 14px 38px rgba(10, 5, 3, 0.78), inset 0 1px 1px 0 rgba(253, 186, 116, 0.42), 0 0 26px rgba(234, 88, 12, 0.26);
+  --theme-shadow-pressed: inset 0 2px 8px rgba(10, 5, 3, 0.78), inset 0 -1px 0 0 rgba(251, 146, 60, 0.16);
+  --theme-shadow-pressed-sm: inset 0 1px 5px rgba(10, 5, 3, 0.7), inset 0 -1px 0 0 rgba(251, 146, 60, 0.12);
+
+  --theme-border: rgba(251, 146, 60, 0.24);
+  --theme-backdrop-blur: 10px;
+  --theme-bg-pattern:
+    radial-gradient(circle at 80% 15%, rgba(234, 88, 12, 0.24) 0%, transparent 45%),
+    radial-gradient(circle at 18% 82%, rgba(225, 29, 72, 0.16) 0%, transparent 46%);
+}
+
+/* =========================================================
+12. ARCTIC GLACIER — Nordic Frost & Fjord Cobalt (365-Day Streak)
+    Crisp Glacier Ice Neumorphism + Deep Cobalt Blue
+   ========================================================= */
+[data-theme="matrix-oracle"] {
+  --theme-bg: #e2eff7;
+  --theme-surface: #e2eff7;
+  --theme-surface-elevated: #ecf5fb;
+  --theme-text: #16324a;
+  --theme-dark: #071929;
+  --theme-muted: #537491;
+  --theme-accent: #0284c7;
+  --theme-accent-glow: rgba(2, 132, 199, 0.36);
+
+  --theme-shadow-flat: 6px 6px 14px #bfd2e0, -6px -6px 14px #ffffff;
+  --theme-shadow-flat-sm: 3px 3px 7px #bfd2e0, -3px -3px 7px #ffffff;
+  --theme-shadow-flat-lg: 10px 10px 22px #b5cade, -10px -10px 22px #ffffff;
+  --theme-shadow-pressed: inset 4px 4px 8px #bfd2e0, inset -4px -4px 8px #ffffff;
+  --theme-shadow-pressed-sm: inset 2px 2px 4px #bfd2e0, inset -2px -2px 4px #ffffff;
+
+  --theme-border: rgba(255, 255, 255, 0.8);
+  --theme-backdrop-blur: 0px;
+  --theme-bg-pattern:
+    radial-gradient(circle at 82% 14%, rgba(56, 189, 248, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 15% 85%, rgba(2, 132, 199, 0.1) 0%, transparent 45%);
+}
+
+/* =========================================================
+13. CELESTIAL PRISM — Rainbow Spectrum Planner (500-Day Streak)
+    Crisp Snow-White Canvas + Vivid Rainbow Diagonal & Prism Rim
+   ========================================================= */
+[data-theme="celestial-prism"] {
+  --theme-bg: #f8fafc;
+  --theme-surface: rgba(255, 255, 255, 0.86);
+  --theme-surface-elevated: #ffffff;
+  --theme-text: #1e293b;
+  --theme-dark: #0f172a;
+  --theme-muted: #64748b;
+  --theme-accent: #ec4899;
+  --theme-accent-glow: rgba(236, 72, 153, 0.42);
+
+  /* Crisp white elevation + subtle rainbow spectrum under-glow */
+  --theme-shadow-flat:
+    0 8px 24px rgba(15, 23, 42, 0.06),
+    -3px 4px 14px rgba(244, 63, 94, 0.09),
+    3px 4px 14px rgba(14, 165, 233, 0.09);
+  --theme-shadow-flat-sm:
+    0 4px 12px rgba(15, 23, 42, 0.05),
+    -2px 2px 8px rgba(250, 204, 21, 0.1),
+    2px 2px 8px rgba(168, 85, 247, 0.09);
+  --theme-shadow-flat-lg:
+    0 14px 32px rgba(15, 23, 42, 0.08),
+    -4px 6px 18px rgba(244, 63, 94, 0.12),
+    4px 6px 18px rgba(6, 182, 212, 0.12);
+  --theme-shadow-pressed: inset 3px 3px 7px rgba(148, 163, 184, 0.28), inset -3px -3px 7px #ffffff;
+  --theme-shadow-pressed-sm: inset 2px 2px 4px rgba(148, 163, 184, 0.24), inset -2px -2px 4px #ffffff;
+
+  --theme-border: rgba(236, 72, 153, 0.24);
+  --theme-backdrop-blur: 12px;
+  /* Vivid multi-color rainbow spectrum wash + subtle pastel diagonal stripes */
+  --theme-bg-pattern:
+    radial-gradient(circle at 12% 14%, rgba(244, 63, 94, 0.18) 0%, transparent 36%),
+    radial-gradient(circle at 50% 10%, rgba(250, 204, 21, 0.18) 0%, transparent 38%),
+    radial-gradient(circle at 88% 16%, rgba(16, 185, 129, 0.16) 0%, transparent 38%),
+    radial-gradient(circle at 82% 84%, rgba(14, 165, 233, 0.18) 0%, transparent 40%),
+    radial-gradient(circle at 18% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 40%),
+    repeating-linear-gradient(
+      135deg,
+      rgba(244, 63, 94, 0.035) 0px,
+      rgba(250, 204, 21, 0.035) 14px,
+      rgba(16, 185, 129, 0.035) 28px,
+      rgba(14, 165, 233, 0.035) 42px,
+      rgba(168, 85, 247, 0.035) 56px
+    );
+}
+
+/* =========================================================
+14. AETHER SOVEREIGN — 1000-Day Aurora & Imperial Gold Crown
+    Celestial Obsidian + Tri-Spectrum Aurora Borealis + Gold Trim
+   ========================================================= */
+[data-theme="singularity"] {
+  --theme-bg: #060913;
+  --theme-surface: rgba(13, 20, 36, 0.72);
+  --theme-surface-elevated: rgba(19, 29, 52, 0.9);
+  --theme-text: #e6f4f1;
+  --theme-dark: #ffffff;
+  --theme-muted: #8fb3bd;
+  --theme-accent: #2dd4bf;
+  --theme-accent-glow: rgba(45, 212, 191, 0.65);
+
+  /* Dual Aurora Teal + Imperial Gold Specular Rim */
+  --theme-shadow-flat: 0 10px 32px rgba(2, 4, 10, 0.78), inset 0 1px 0 0 rgba(253, 224, 71, 0.36), inset 0 -1px 0 0 rgba(45, 212, 191, 0.22);
+  --theme-shadow-flat-sm: 0 4px 14px rgba(2, 4, 10, 0.68), inset 0 1px 0 0 rgba(253, 224, 71, 0.28);
+  --theme-shadow-flat-lg: 0 16px 44px rgba(2, 4, 10, 0.88), inset 0 1px 1px 0 rgba(254, 240, 138, 0.55), 0 0 34px rgba(45, 212, 191, 0.28);
+  --theme-shadow-pressed: inset 0 2px 8px rgba(2, 4, 10, 0.85), inset 0 -1px 0 0 rgba(45, 212, 191, 0.2);
+  --theme-shadow-pressed-sm: inset 0 1px 5px rgba(2, 4, 10, 0.78), inset 0 -1px 0 0 rgba(45, 212, 191, 0.14);
+
+  --theme-border: rgba(253, 224, 71, 0.34);
+  --theme-backdrop-blur: 14px;
+  /* Multi-layered Northern Lights Aurora + Imperial Gold Zenith Glow */
+  --theme-bg-pattern:
+    radial-gradient(ellipse at 20% 10%, rgba(45, 212, 191, 0.26) 0%, transparent 48%),
+    radial-gradient(ellipse at 80% 15%, rgba(168, 85, 247, 0.22) 0%, transparent 48%),
+    radial-gradient(circle at 50% 88%, rgba(251, 191, 36, 0.22) 0%, transparent 50%),
+    linear-gradient(125deg, rgba(45, 212, 191, 0.06) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(251, 191, 36, 0.07) 100%);
+}

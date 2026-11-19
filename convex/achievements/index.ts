@@ -78,8 +78,14 @@ export const listOverview = query({
       };
     });
 
+    const highestUnlockedMilestone = achievements.reduce(
+      (max, a) => Math.max(max, a.milestone),
+      0,
+    );
+
     return {
       milestones: [...STREAK_MILESTONES],
+      highestUnlockedMilestone,
       habits: items,
     };
   },

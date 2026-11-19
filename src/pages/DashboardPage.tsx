@@ -12,6 +12,7 @@ import { useToast } from "../context/ToastContext";
 import { parseConvexError } from "../lib/errorUtils";
 import { getMilestoneMeta } from "../lib/achievements";
 import { soundFX } from "../lib/soundEffects";
+import { getThemesUnlockedAtMilestone } from "../lib/themes";
 
 interface DashboardPageProps {
   sessionToken: string;
@@ -24,12 +25,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const habits = useQuery(
     api.habits.index.listWithLogs,
-    sessionToken ? { sessionToken } : "skip"
+    sessionToken ? { sessionToken } : "skip",
   );
 
   // ⚡ 0ms One-Way Optimistic UI Update
   const toggleTodayMutation = useMutation(
-    api.habits.index.toggleToday
+    api.habits.index.toggleToday,
   ).withOptimisticUpdate((localStore, args) => {
     const currentHabits = localStore.getQuery(api.habits.index.listWithLogs, {
       sessionToken: args.sessionToken,
@@ -51,13 +52,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       localStore.setQuery(
         api.habits.index.listWithLogs,
         { sessionToken: args.sessionToken },
-        updatedHabits
+        updatedHabits,
       );
     }
   });
 
   const updateHabitMutation = useMutation(
-    api.habits.index.updateWithVersionCheck
+    api.habits.index.updateWithVersionCheck,
   );
   const deleteHabitMutation = useMutation(api.habits.index.remove);
 
@@ -82,6 +83,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       if (unlocked.length > 0) {
         const highestMilestone = unlocked[unlocked.length - 1];
         const meta = getMilestoneMeta(highestMilestone);
+        const unlockedThemes = unlocked.flatMap((m) =>
+          getThemesUnlockedAtMilestone(m),
+        );
 
         soundFX.achievementUnlock();
 
@@ -91,9 +95,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           origin: { y: 0.65 },
         });
 
-        toast.success(
-          `🎉 ${highestMilestone}-Day Streak Unlocked: "${meta.title}"! View in Achievements.`
-        );
+        if (unlockedThemes.length > 0) {
+          toast.success(
+            `🎉 ${highestMilestone}-Day Streak ("${meta.title}") + New Theme Unlocked: "${unlockedThemes[0].label}"!`,
+          );
+        } else {
+          toast.success(
+            `🎉 ${highestMilestone}-Day Streak Unlocked: "${meta.title}"! View in Achievements.`,
+          );
+        }
       } else {
         toast.success(`Marked "${targetHabit?.title}" done (${date})`);
       }
@@ -109,7 +119,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     title: string,
     category: string,
     expectedVersion: number,
-    reminderTime?: string
+    reminderTime?: string,
   ) => {
     await updateHabitMutation({
       sessionToken,

@@ -17,13 +17,13 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-18-streak-achievements-v2",
+  id: "2026-11-19-collector-themes-v1",
   badge: "NEW",
-  title: "Streak Achievements & Shareable Badges",
+  title: "Unlock Themes by Progress!",
   description:
-    "Unlock & Share Streak Medals (1 to 1,000 days), share CARDS on WhatsApp/Instagram!",
+    "Get your fav themes like Arc Reactor, Gold, Space, Prism etc. by achieving streak milestones!",
   action: {
-    label: "View Achievements",
+    label: "View Milestones",
     targetView: "achievements",
   },
   isActive: true,
