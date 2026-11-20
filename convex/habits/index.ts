@@ -6,6 +6,13 @@ import { assertRateLimit } from "../common/rateLimiter";
 import { internal } from "../_generated/api";
 import { calculateStreakStats, unlockEligibleMilestones } from "../achievements/helpers";
 
+import {
+  HABIT_COMPLETION_COINS,
+  HABIT_COMPLETION_XP,
+  computeMilestoneBonusCoins,
+  creditWalletActivity,
+} from "../shop/helpers";
+
 // 1. QUERY: Get Habits with Last 30 Days Heatmap Logs
 export const listWithLogs = query({
   args: { sessionToken: v.string() },
@@ -305,12 +312,23 @@ export const toggleToday = mutation({
       streakToCheck: currentStreak,
     });
 
+    const milestoneBonus = computeMilestoneBonusCoins(newlyUnlockedMilestones);
+    const totalCoinsEarned = HABIT_COMPLETION_COINS + milestoneBonus;
+
+    await creditWalletActivity(ctx, {
+      userId: user.userId,
+      coinsToAdd: totalCoinsEarned,
+      xpToAdd: HABIT_COMPLETION_XP,
+    });
+
     return {
       completed: true,
       alreadyCompleted: false,
       currentStreak,
       longestStreak: nextLongest,
       newlyUnlockedMilestones,
+      coinsEarned: totalCoinsEarned,
+      xpEarned: HABIT_COMPLETION_XP,
     };
   },
 });

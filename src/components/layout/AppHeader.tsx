@@ -7,17 +7,23 @@ import { NeuThemeSelect } from "../ui/NeuThemeSelect";
 import { UserAvatar } from "../ui/UserAvatar";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { WalletBadge } from "./WalletBadge";
 
-export type AppView = "dashboard" | "achievements" | "leaderboard" | "profile";
+export type AppView = "dashboard" | "achievements" | "leaderboard" | "profile" | "shop";
 
 interface AppHeaderProps {
   userName: string;
   avatarStorageId?: Id<"_storage">;
+  sessionToken: string,
+  presetAvatarId?: string
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
   userName,
   avatarStorageId,
+  sessionToken,
+  presetAvatarId
+  
 }) => {
   const { canInstall, promptInstall } = usePWAInstall();
   const navigate = useNavigate();
@@ -65,9 +71,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
           <NeuThemeSelect />
 
+          <WalletBadge sessionToken={sessionToken} />
+
           <UserAvatar
             name={userName}
             avatarStorageId={avatarStorageId}
+            presetAvatarId={presetAvatarId}
             size="md"
             onClick={() => navigate(isProfile ? "/" : "/profile")}
             className={isProfile ? "ring-2 ring-neu-accent" : ""}

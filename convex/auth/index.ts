@@ -125,6 +125,7 @@ export const getMe = query({
       email: user.email,
       name: user.name,
       avatarStorageId: user.avatarStorageId,
+      presetAvatarId: user.presetAvatarId,
       notificationsEnabled: user.notificationPreferences?.enabled ?? true,
     };
   },
@@ -136,6 +137,7 @@ export const updateProfile = mutation({
     sessionToken: v.string(),
     name: v.string(),
     avatarStorageId: v.optional(v.id("_storage")),
+    presetAvatarId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db
@@ -152,12 +154,33 @@ export const updateProfile = mutation({
       throw new ConvexError("Name cannot be empty");
     }
 
-    const patchData: { name: string; avatarStorageId?: any } = {
+    const patchData: {
+      name: string;
+      avatarStorageId?: any;
+      presetAvatarId?: string | undefined;
+    } = {
       name: trimmedName,
     };
 
     if (args.avatarStorageId !== undefined) {
+      // User uploaded a custom photo -> clear preset avatar
       patchData.avatarStorageId = args.avatarStorageId;
+      patchData.presetAvatarId = undefined;
+    } else if (args.presetAvatarId !== undefined) {
+      if (args.presetAvatarId === null) {
+        patchData.presetAvatarId = undefined;
+      } else {
+        // Security check: ensure user owns this avatar in wallet
+        const wallet = await ctx.db
+          .query("userWallets")
+          .withIndex("by_user", (q) => q.eq("userId", session.userId))
+          .first();
+        if (!wallet?.boughtItems.includes(args.presetAvatarId)) {
+          throw new ConvexError("You haven't unlocked this avatar in the Shop yet.");
+        }
+        patchData.presetAvatarId = args.presetAvatarId;
+        patchData.avatarStorageId = undefined; // Switch from custom photo to shop avatar
+      }
     }
 
     await ctx.db.patch(session.userId, patchData);

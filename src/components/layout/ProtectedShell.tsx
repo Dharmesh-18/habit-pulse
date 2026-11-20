@@ -10,12 +10,16 @@ import { ThemeAmbientBackdrop } from "../ui/ThemeAmbientBackdrop";
 interface ProtectedShellProps {
   userName: string;
   avatarStorageId?: Id<"_storage">;
+  presetAvatarId?: string;
+  sessionToken: string;
   onLogout: () => void;
 }
 
 export const ProtectedShell: React.FC<ProtectedShellProps> = ({
   userName,
   avatarStorageId,
+  presetAvatarId,
+  sessionToken,
   onLogout,
 }) => {
   const location = useLocation();
@@ -29,6 +33,8 @@ export const ProtectedShell: React.FC<ProtectedShellProps> = ({
         <AppHeader
           userName={userName}
           avatarStorageId={avatarStorageId}
+          presetAvatarId={presetAvatarId}
+          sessionToken={sessionToken}
         />
 
         <div className="max-w-6xl w-full mx-auto px-3.5 sm:px-6 pt-5 sm:pt-7 pb-24 md:pb-10 flex flex-col md:flex-row gap-6">

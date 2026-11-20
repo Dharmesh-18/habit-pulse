@@ -78,6 +78,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       avatarStorageId={
                         entry.avatarStorageId as Id<"_storage"> | undefined
                       }
+                      presetAvatarId={entry.presetAvatarId}
                       size="sm"
                     />
                     <div className="min-w-0">

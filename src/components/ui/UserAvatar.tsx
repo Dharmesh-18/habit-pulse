@@ -8,23 +8,33 @@ import { cn } from "../../lib/utils";
 interface UserAvatarProps {
   name: string;
   avatarStorageId?: Id<"_storage">;
+  presetAvatarId?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   onClick?: () => void;
 }
 
+function resolvePresetAvatarUrl(presetAvatarId?: string): string | null {
+  if (!presetAvatarId) return null;
+  // "avatar-coco" -> "/avatars/coco.svg"
+  const slug = presetAvatarId.replace(/^avatar-/, "");
+  return `/avatars/${slug}.svg`;
+}
+
 export const UserAvatar: React.FC<UserAvatarProps> = ({
   name,
   avatarStorageId,
+  presetAvatarId,
   size = "md",
   className,
   onClick,
 }) => {
-  const avatarUrl = useQuery(
+  const uploadedAvatarUrl = useQuery(
     api.storage.index.getImageUrl,
     avatarStorageId ? { storageId: avatarStorageId } : "skip"
   );
 
+  const displayUrl = uploadedAvatarUrl || resolvePresetAvatarUrl(presetAvatarId);
   const initial = (name.trim()[0] || "U").toUpperCase();
 
   const sizeClasses = {
@@ -42,14 +52,16 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
       onClick={onClick}
       className={cn(
         "rounded-full bg-neu-bg flex items-center justify-center overflow-hidden transition-all duration-200 outline-none select-none",
-        onClick ? "shadow-neu-flat hover:shadow-neu-flat-lg active:shadow-neu-pressed cursor-pointer" : "shadow-neu-flat",
+        onClick
+          ? "shadow-neu-flat hover:shadow-neu-flat-lg active:shadow-neu-pressed cursor-pointer"
+          : "shadow-neu-flat",
         sizeClasses[size],
         className
       )}
     >
-      {avatarUrl ? (
+      {displayUrl ? (
         <img
-          src={avatarUrl}
+          src={displayUrl}
           alt={name}
           className="w-full h-full object-cover"
         />

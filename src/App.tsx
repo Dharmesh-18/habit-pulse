@@ -10,6 +10,7 @@ import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { ProfileView } from "./components/profile/ProfileView";
 import { useToast } from "./context/ToastContext";
 import { AchievementsPage } from "./pages/AchievementsPage";
+import { ShopPage } from "./pages/ShopPage";
 
 export function App() {
   const toast = useToast();
@@ -46,6 +47,8 @@ export function App() {
           <ProtectedShell
             userName={currentUser.name}
             avatarStorageId={currentUser.avatarStorageId}
+            presetAvatarId={currentUser.presetAvatarId}
+            sessionToken={token}
             onLogout={handleLogout}
           />
         }
@@ -56,6 +59,9 @@ export function App() {
           path="/leaderboard"
           element={<LeaderboardPage sessionToken={token} />}
         />
+
+        <Route path="/shop" element={<ShopPage sessionToken={token} />} />
+
         <Route
           path="/profile"
           element={

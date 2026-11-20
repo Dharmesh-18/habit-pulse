@@ -17,14 +17,14 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-19-collector-themes-v1",
+  id: "2026-11-20-shop-items-v1",
   badge: "NEW",
-  title: "Unlock Themes by Progress!",
+  title: "Earn coins and unlock exclusive items!",
   description:
-    "Get your fav themes like Arc Reactor, Gold, Space, Prism etc. by achieving streak milestones!",
+    "Complete daily tasks to earn coins and unlock exclusive avatars, themes, and more in the shop. Check out the new items now!",
   action: {
-    label: "View Milestones",
-    targetView: "achievements",
+    label: "View Shop",
+    targetView: "shop",
   },
   isActive: true,
 };

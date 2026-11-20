@@ -11,6 +11,7 @@ const VIEW_ROUTE_MAP: Record<AppView, string> = {
   dashboard: "/",
   achievements: "/achievements",
   leaderboard: "/leaderboard",
+  shop: "/shop",
   profile: "/profile",
 };
 

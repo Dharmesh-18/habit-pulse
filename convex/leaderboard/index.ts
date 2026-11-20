@@ -7,6 +7,7 @@ export interface LeaderboardEntry {
   userId: string;
   name: string;
   avatarStorageId?: string;
+  presetAvatarId?: string;
   completedTasks: number;
   totalTasks: number;
   percentage: number;
@@ -76,6 +77,7 @@ export const getTopPerformers = query({
           userId: u._id,
           name: u.name,
           avatarStorageId: u.avatarStorageId,
+          presetAvatarId: u.presetAvatarId,
           completedTasks,
           totalTasks,
           percentage,

@@ -26,6 +26,8 @@ import type * as notifications_pushSubscriptions from "../notifications/pushSubs
 import type * as notifications_templates from "../notifications/templates.js";
 import type * as notifications_types from "../notifications/types.js";
 import type * as notifications_webPush from "../notifications/webPush.js";
+import type * as shop_helpers from "../shop/helpers.js";
+import type * as shop_index from "../shop/index.js";
 import type * as storage_index from "../storage/index.js";
 
 import type {
@@ -53,6 +55,8 @@ declare const fullApi: ApiFromModules<{
   "notifications/templates": typeof notifications_templates;
   "notifications/types": typeof notifications_types;
   "notifications/webPush": typeof notifications_webPush;
+  "shop/helpers": typeof shop_helpers;
+  "shop/index": typeof shop_index;
   "storage/index": typeof storage_index;
 }>;
 

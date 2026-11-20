@@ -46,20 +46,29 @@ const PODIUM_CONFIG = {
 interface PodiumAvatarProps {
   name: string;
   avatarStorageId?: Id<"_storage">;
+  presetAvatarId?: string;
   slotPosition: 1 | 2 | 3;
+}
+
+function resolvePresetAvatarUrl(presetAvatarId?: string): string | null {
+  if (!presetAvatarId) return null;
+  const slug = presetAvatarId.replace(/^avatar-/, "");
+  return `/avatars/${slug}.svg`;
 }
 
 const PodiumAvatar: React.FC<PodiumAvatarProps> = ({
   name,
   avatarStorageId,
+  presetAvatarId,
   slotPosition,
 }) => {
   const style = PODIUM_CONFIG[slotPosition];
-  const avatarUrl = useQuery(
+  const uploadedAvatarUrl = useQuery(
     api.storage.index.getImageUrl,
     avatarStorageId ? { storageId: avatarStorageId } : "skip"
   );
 
+  const displayUrl = uploadedAvatarUrl || resolvePresetAvatarUrl(presetAvatarId);
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
 
   return (
@@ -70,9 +79,9 @@ const PodiumAvatar: React.FC<PodiumAvatarProps> = ({
         style.ringClass
       )}
     >
-      {avatarUrl ? (
+      {displayUrl ? (
         <img
-          src={avatarUrl}
+          src={displayUrl}
           alt={name}
           className="w-full h-full object-cover"
         />
@@ -154,13 +163,14 @@ export const LeaderboardHeroes: React.FC<LeaderboardHeroesProps> = ({
                 </span>
               </div>
 
-              {/* Large Circular Profile Avatar (Image or Bold Initial Letter) */}
+              {/* Large Circular Profile Avatar (Uploaded Photo, Shop Avatar, or Initial) */}
               <div className="relative">
                 <PodiumAvatar
                   name={entry.name}
                   avatarStorageId={
                     entry.avatarStorageId as Id<"_storage"> | undefined
                   }
+                  presetAvatarId={entry.presetAvatarId}
                   slotPosition={slotPosition}
                 />
 

@@ -11,6 +11,7 @@ export default defineSchema({
     providerAccountId: v.optional(v.string()),
     externalAvatarUrl: v.optional(v.string()), // Google/GitHub profile picture URL
     avatarStorageId: v.optional(v.id("_storage")),
+    presetAvatarId: v.optional(v.string()), // Equipped shop avatar itemKey (e.g. "avatar-coco")
     notificationPreferences: v.optional(
       v.object({
       enabled: v.optional(v.boolean()),
@@ -83,4 +84,27 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_habit", ["habitId"])
     .index("by_habit_milestone", ["habitId", "milestone"]),
+
+  // User Gamification Wallet (Spendable Coins, Monotonic XP & Purchased Item Keys)
+  userWallets: defineTable({
+    userId: v.id("users"),
+    coins: v.number(),
+    xp: v.number(),
+    boughtItems: v.array(v.string()), // Array of shopItems.itemKey
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
+
+  // Extensible Shop Catalog (Avatars now; Frames, Badges, Power-ups later)
+  shopItems: defineTable({
+    itemKey: v.string(), // Unique stable slug, e.g. "avatar-coco"
+    title: v.string(), // e.g. "Coco", "Knight", "Savior"
+    itemType: v.string(), // "avatar" (extensible to "frame" | "badge" | "powerup")
+    price: v.number(),
+    assetPath: v.string(), // e.g. "/avatars/coco.svg"
+    sortOrder: v.number(),
+    isActive: v.boolean(),
+  })
+    .index("by_item_key", ["itemKey"])
+    .index("by_type_active", ["itemType", "isActive"]),
 });
