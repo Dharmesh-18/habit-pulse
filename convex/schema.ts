@@ -107,4 +107,41 @@ export default defineSchema({
   })
     .index("by_item_key", ["itemKey"])
     .index("by_type_active", ["itemType", "isActive"]),
+  
+
+  // Real-money payment orders (Razorpay order lifecycle)
+  paymentOrders: defineTable({
+    userId: v.id("users"),
+    provider: v.string(), // "razorpay"
+    orderId: v.string(), // Razorpay order_id (e.g. "order_xxx")
+    paymentId: v.optional(v.string()), // Razorpay payment_id (e.g. "pay_xxx")
+    packageKey: v.string(), // e.g. "pack-200"
+    amountPaise: v.number(), // e.g. 4900 for ₹49
+    currency: v.string(), // "INR"
+    coins: v.number(), // Coins to credit on success
+    status: v.union(
+      v.literal("created"),
+      v.literal("paid"),
+      v.literal("failed")
+    ),
+    createdAt: v.number(),
+    paidAt: v.optional(v.number()),
+  })
+    .index("by_order_id", ["orderId"])
+    .index("by_user", ["userId"]),
+
+  // Immutable Coin Audit Ledger
+  coinTransactions: defineTable({
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("purchase"),
+      v.literal("habit_reward"),
+      v.literal("shop_spend")
+    ),
+    coinsDelta: v.number(), // +200 for purchase, -50 for spend
+    referenceId: v.string(), // orderId or itemKey
+    description: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
 });

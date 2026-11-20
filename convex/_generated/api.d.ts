@@ -17,6 +17,7 @@ import type * as common_auth from "../common/auth.js";
 import type * as common_rateLimiter from "../common/rateLimiter.js";
 import type * as cron from "../cron.js";
 import type * as habits_index from "../habits/index.js";
+import type * as http from "../http.js";
 import type * as jobs_reminders from "../jobs/reminders.js";
 import type * as leaderboard_index from "../leaderboard/index.js";
 import type * as notifications_actions from "../notifications/actions.js";
@@ -26,6 +27,8 @@ import type * as notifications_pushSubscriptions from "../notifications/pushSubs
 import type * as notifications_templates from "../notifications/templates.js";
 import type * as notifications_types from "../notifications/types.js";
 import type * as notifications_webPush from "../notifications/webPush.js";
+import type * as payments_catalog from "../payments/catalog.js";
+import type * as payments_index from "../payments/index.js";
 import type * as shop_helpers from "../shop/helpers.js";
 import type * as shop_index from "../shop/index.js";
 import type * as storage_index from "../storage/index.js";
@@ -46,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "common/rateLimiter": typeof common_rateLimiter;
   cron: typeof cron;
   "habits/index": typeof habits_index;
+  http: typeof http;
   "jobs/reminders": typeof jobs_reminders;
   "leaderboard/index": typeof leaderboard_index;
   "notifications/actions": typeof notifications_actions;
@@ -55,6 +59,8 @@ declare const fullApi: ApiFromModules<{
   "notifications/templates": typeof notifications_templates;
   "notifications/types": typeof notifications_types;
   "notifications/webPush": typeof notifications_webPush;
+  "payments/catalog": typeof payments_catalog;
+  "payments/index": typeof payments_index;
   "shop/helpers": typeof shop_helpers;
   "shop/index": typeof shop_index;
   "storage/index": typeof storage_index;

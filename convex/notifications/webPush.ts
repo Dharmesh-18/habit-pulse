@@ -4,6 +4,7 @@
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
+import type { Doc } from "../_generated/dataModel";
 import * as webpush from "web-push";
 
 export const sendPushToUser = internalAction({
@@ -49,7 +50,7 @@ export const sendPushToUser = internalAction({
     });
 
     await Promise.all(
-      subscriptions.map(async (sub) => {
+      subscriptions.map(async (sub: Doc<"pushSubscriptions">) => {
         try {
           await webpush.sendNotification(
             {

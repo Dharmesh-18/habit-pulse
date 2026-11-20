@@ -7,6 +7,7 @@ import { NeuButton } from "../components/ui/NeuButton";
 import { NeuInput } from "../components/ui/NeuInput";
 import { NeuThemeSelect } from "../components/ui/NeuThemeSelect";
 import { SocialAuthButtons } from "../components/auth/SocialAuthButtons";
+import { LegalFooter } from "../components/ui/LegalFooter";
 import { Flame } from "lucide-react";
 import { useToast } from "../context/ToastContext";
 import { parseConvexError } from "../lib/errorUtils";
@@ -133,7 +134,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         </NeuCard>
       </div>
 
-      <div className="h-6" />
+      <LegalFooter />
     </div>
   );
 };

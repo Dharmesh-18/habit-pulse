@@ -4,6 +4,13 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ProtectedShell } from "./components/layout/ProtectedShell";
+import { useLocation } from "react-router-dom";
+import {
+  PrivacyPolicyPage,
+  TermsPage,
+  RefundPolicyPage,
+  ContactPage,
+} from "./pages/LegalPages";
 import { AuthPage } from "./pages/AuthPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
@@ -35,6 +42,13 @@ export function App() {
     navigate("/", { replace: true });
     toast.info("Logged out successfully");
   };
+
+  const location = useLocation();
+
+  if (location.pathname === "/privacy") return <PrivacyPolicyPage />;
+  if (location.pathname === "/terms") return <TermsPage />;
+  if (location.pathname === "/refunds") return <RefundPolicyPage />;
+  if (location.pathname === "/contact") return <ContactPage />;
 
   if (!currentUser) {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;

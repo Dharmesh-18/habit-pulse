@@ -2,13 +2,21 @@
 import React, { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useNavigate } from "react-router-dom";
-import { Coins, Store, CheckCircle2, Sparkles, ShoppingBag } from "lucide-react";
+import {
+  Coins,
+  Store,
+  CheckCircle2,
+  Sparkles,
+  ShoppingBag,
+} from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { NeuCard } from "../components/ui/NeuCard";
 import { NeuButton } from "../components/ui/NeuButton";
 import { ConfirmActionModal } from "../components/ui/ConfirmActionModal";
+import { LegalFooter } from "../components/ui/LegalFooter";
 import { useToast } from "../context/ToastContext";
 import { parseConvexError } from "../lib/errorUtils";
+import { CoinPacksSection } from "../components/shop/CoinPacksSection";
 
 interface ShopPageProps {
   sessionToken: string;
@@ -23,7 +31,8 @@ const SHOP_CATEGORIES: { id: ShopCategory; label: string }[] = [
 export const ShopPage: React.FC<ShopPageProps> = ({ sessionToken }) => {
   const toast = useToast();
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<ShopCategory>("avatar");
+  const [selectedCategory, setSelectedCategory] =
+    useState<ShopCategory>("avatar");
   const [pendingBuyItem, setPendingBuyItem] = useState<{
     itemKey: string;
     title: string;
@@ -58,7 +67,9 @@ export const ShopPage: React.FC<ShopPageProps> = ({ sessionToken }) => {
         sessionToken,
         itemKey: pendingBuyItem.itemKey,
       });
-      toast.success(`Unlocked "${pendingBuyItem.title}"! Tap Equip to wear it.`);
+      toast.success(
+        `Unlocked "${pendingBuyItem.title}"! Tap Equip to wear it.`,
+      );
       setPendingBuyItem(null);
     } catch (err: unknown) {
       toast.error(parseConvexError(err));
@@ -76,7 +87,9 @@ export const ShopPage: React.FC<ShopPageProps> = ({ sessionToken }) => {
             <Store className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-extrabold text-neu-dark">Rewards Shop</h2>
+            <h2 className="text-lg font-extrabold text-neu-dark">
+              Rewards Shop
+            </h2>
             <p className="text-xs text-neu-muted">
               Earn +5 coins per habit & bonus coins on streak milestones
             </p>
@@ -160,7 +173,11 @@ export const ShopPage: React.FC<ShopPageProps> = ({ sessionToken }) => {
               {isOwned ? (
                 <NeuButton
                   size="sm"
-                  onClick={() => navigate(`/profile?equip=${encodeURIComponent(item.itemKey)}`)}
+                  onClick={() =>
+                    navigate(
+                      `/profile?equip=${encodeURIComponent(item.itemKey)}`,
+                    )
+                  }
                   className="w-full flex items-center justify-center gap-1.5 font-bold text-neu-accent"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -181,12 +198,22 @@ export const ShopPage: React.FC<ShopPageProps> = ({ sessionToken }) => {
                   className="w-full flex items-center justify-center gap-1.5 font-bold"
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>{canAfford ? `Buy • ${item.price}` : `${item.price} Coins`}</span>
+                  <span>
+                    {canAfford ? `Buy • ${item.price}` : `${item.price} Coins`}
+                  </span>
                 </NeuButton>
               )}
             </NeuCard>
           );
         })}
+      </div>
+
+      {/* Coin Packs Top-Up Section */}
+      <CoinPacksSection sessionToken={sessionToken} />
+
+      {/* Legal & Compliance Links Footer */}
+      <div className="pt-2 border-t border-black/5">
+        <LegalFooter />
       </div>
 
       {/* Purchase Confirmation Modal */}
