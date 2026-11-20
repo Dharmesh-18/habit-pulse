@@ -17,11 +17,11 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-20-shop-items-v1",
+  id: "2026-11-20-shop-items-v2",
   badge: "NEW",
-  title: "Earn coins and unlock exclusive items!",
+  title: "Buy coins and unlock exclusive items(BETA)!",
   description:
-    "Complete daily tasks to earn coins and unlock exclusive avatars, themes, and more in the shop. Check out the new items now!",
+    "Buy and earn coins and unlock exclusive avatars, themes, and more in the shop. Check out the new items now!",
   action: {
     label: "View Shop",
     targetView: "shop",
