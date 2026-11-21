@@ -17,14 +17,14 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-20-shop-items-v2",
+  id: "2026-11-20-ai-reports-v1",
   badge: "NEW",
-  title: "Buy coins and unlock exclusive items(BETA)!",
+  title: "AI Generated Report!",
   description:
-    "Buy and earn coins and unlock exclusive avatars, themes, and more in the shop. Check out the new items now!",
+    "Get your AI generated report on weekly and monthly basis for performance tracking!",
   action: {
-    label: "View Shop",
-    targetView: "shop",
+    label: "Get Mine",
+    targetView: "profile",
   },
   isActive: true,
 };

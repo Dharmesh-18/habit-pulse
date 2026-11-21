@@ -30,6 +30,7 @@ import {
   setSoundEnabled,
   soundFX,
 } from "../../lib/soundEffects";
+import { HabitReportCard } from "./HabitReportCard";
 
 interface ProfileViewProps {
   user: {
@@ -254,7 +255,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const hasUnsavedCustomPhoto = Boolean(selectedFile);
   const hasSavedCustomPhoto =
-    Boolean(user.avatarStorageId) && !selectedPresetId && !hasUnsavedCustomPhoto;
+    Boolean(user.avatarStorageId) &&
+    !selectedPresetId &&
+    !hasUnsavedCustomPhoto;
 
   return (
     <div className="max-w-xl mx-auto w-full flex flex-col gap-6">
@@ -394,6 +397,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </NeuButton>
           </div>
         </form>
+
+        {/* AI Habit Performance Report Generator */}
+        <div className="pt-4 border-t border-black/5">
+          <HabitReportCard sessionToken={sessionToken} />
+        </div>
 
         {/* Session Actions — Bottom Full-Width Logout */}
         <div className="pt-4 border-t border-black/5">
