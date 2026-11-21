@@ -167,20 +167,6 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
     }
   };
 
-  const handleSimulateConflict = async () => {
-    if (!editingHabit) return;
-    try {
-      await onUpdate(
-        editingHabit._id,
-        editTitle.trim() + " [Conflict]",
-        editCategory,
-        editingHabit.version - 1,
-      );
-    } catch (err: unknown) {
-      toast.error(parseConvexError(err));
-    }
-  };
-
   const handleConfirmDelete = async () => {
     if (!deletingHabit) return;
     try {
@@ -288,7 +274,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                     className="group hover:bg-black/[0.015] transition-colors"
                   >
                     {/* Sticky Habit Info Cell: Compact on Mobile, Expanded on Desktop */}
-                    <td className="sticky left-0 z-10 bg-neu-bg px-3 sm:px-5 py-2.5 sm:py-3 w-[138px] min-w-[138px] max-w-[138px] sm:w-[235px] sm:min-w-[235px] sm:max-w-[235px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]">
+                    <td className="sticky left-0 z-10 bg-neu-bg px-2.5 sm:px-5 py-2.5 sm:py-3 w-[154px] min-w-[154px] max-w-[154px] sm:w-[235px] sm:min-w-[235px] sm:max-w-[235px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]">
                       <div className="flex items-start sm:items-center justify-between gap-2">
                         <div className="flex items-start sm:items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
                           {/* Category Icon */}
@@ -304,7 +290,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                             />
                           </div>
 
-                          {/* Title + Meta + Mobile Action Row */}
+                          {/* Title + Full Time + Mobile Action Row */}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
                               <span
@@ -318,39 +304,37 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                               />
                             </div>
 
-                            {/* Sub-row: Reminder Time + Stacked Actions on Mobile */}
-                            <div className="flex items-center justify-between sm:justify-start gap-2 mt-1">
-                              <div className="flex items-center gap-1.5 text-[10px] text-neu-muted truncate">
-                                {habit.reminderTime && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
-                                    {habit.reminderTime}
-                                  </span>
-                                )}
-                                <span className="hidden sm:inline font-mono opacity-75">
-                                  v{habit.version}
+                            {/* Meta Row: Full Unclipped Time + Desktop Version */}
+                            <div className="flex items-center gap-1.5 text-[10px] text-neu-muted mt-0.5">
+                              {habit.reminderTime && (
+                                <span className="flex items-center gap-1 whitespace-nowrap font-medium">
+                                  <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
+                                  {habit.reminderTime}
                                 </span>
-                              </div>
+                              )}
+                              <span className="hidden sm:inline font-mono opacity-75">
+                                v{habit.version}
+                              </span>
+                            </div>
 
-                              {/* Mobile-only Edit & Delete Buttons right below Habit Name */}
-                              <div className="flex sm:hidden items-center gap-1 shrink-0">
-                                <button
-                                  type="button"
-                                  title="Edit Habit"
-                                  onClick={() => openEditModal(habit)}
-                                  className="p-1 rounded-md bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed text-neu-muted hover:text-neu-accent"
-                                >
-                                  <Edit2 className="w-2.5 h-2.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  title="Delete Habit"
-                                  onClick={() => setDeletingHabit(habit)}
-                                  className="p-1 rounded-md bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed text-neu-muted hover:text-neu-danger"
-                                >
-                                  <Trash2 className="w-2.5 h-2.5" />
-                                </button>
-                              </div>
+                            {/* Mobile-only Edit & Delete Buttons on Clean Separate Row */}
+                            <div className="flex sm:hidden items-center gap-1.5 mt-1.5">
+                              <button
+                                type="button"
+                                title="Edit Habit"
+                                onClick={() => openEditModal(habit)}
+                                className="p-1 rounded-md bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed text-neu-muted hover:text-neu-accent"
+                              >
+                                <Edit2 className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Delete Habit"
+                                onClick={() => setDeletingHabit(habit)}
+                                className="p-1 rounded-md bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed text-neu-muted hover:text-neu-danger"
+                              >
+                                <Trash2 className="w-2.5 h-2.5" />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -470,18 +454,8 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
               onChange={(cat) => setEditCategory(cat)}
             />
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-black/5">
-              <NeuButton
-                type="button"
-                size="sm"
-                variant="danger"
-                onClick={handleSimulateConflict}
-                title="Sends stale version to test OCC rollback"
-              >
-                Test Conflict
-              </NeuButton>
-
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-black/5">
+              <div className="flex items-center gap-3 justify-end w-full">
                 <NeuButton
                   type="button"
                   size="sm"

@@ -42,7 +42,6 @@ onToggleToday: (
 export const HabitCard: React.FC<HabitCardProps> = ({
   habit,
   onToggleToday,
-  onUpdate,
   onDelete,
 }) => {
   const toast = useToast();
@@ -51,7 +50,6 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [editTitle, setEditTitle] = useState(habit.title);
 
   const catMeta = getCategoryMeta(habit.category);
   const CategoryIcon = catMeta.icon;
@@ -62,28 +60,6 @@ export const HabitCard: React.FC<HabitCardProps> = ({
       ? { storageId: habit.customImageStorageId }
       : "skip",
   );
-
-  const handleSaveNormal = async () => {
-    try {
-      await onUpdate(habit._id, editTitle, habit.category, habit.version);
-      setIsEditing(false);
-    } catch (err: unknown) {
-      toast.error(parseConvexError(err));
-    }
-  };
-
-  const handleSimulateConflict = async () => {
-    try {
-      await onUpdate(
-        habit._id,
-        editTitle + " [Conflict]",
-        habit.category,
-        habit.version - 1,
-      );
-    } catch (err: unknown) {
-      toast.error(parseConvexError(err));
-    }
-  };
 
   const handleConfirmDelete = async () => {
     try {
@@ -179,7 +155,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
               setIsEditing(false);
               setShowDeleteConfirm(!showDeleteConfirm);
             }}
-            className="w-8 h-8 bg-red-100 rounded-xl bg-neu-bg shadow-neu-flat hover:shadow-neu-flat-lg active:shadow-neu-pressed flex items-center justify-center text-neu-muted hover:text-neu-danger transition-all duration-200"
+            className="w-8 h-8 rounded-xl bg-neu-bg shadow-neu-flat hover:shadow-neu-flat-lg active:shadow-neu-pressed flex items-center justify-center text-neu-muted hover:text-neu-danger transition-all duration-200"
           >
             <Trash2 className="w-3.5 h-3.5 text-red-600" />
           </button>
@@ -208,30 +184,6 @@ export const HabitCard: React.FC<HabitCardProps> = ({
               disabled={isDeleting}
             >
               {isDeleting ? "Deleting..." : "Delete"}
-            </NeuButton>
-          </div>
-        </div>
-      )}
-
-      {/* Inline Edit Panel */}
-      {isEditing && (
-        <div className="flex flex-col gap-3 p-3 rounded-xl bg-neu-bg shadow-neu-pressed-sm mt-2">
-          <input
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            className="w-full bg-neu-bg p-2 text-sm rounded-lg shadow-neu-pressed outline-none"
-          />
-          <div className="flex items-center justify-between">
-            <NeuButton size="sm" variant="primary" onClick={handleSaveNormal}>
-              Save Normal (v{habit.version})
-            </NeuButton>
-            <NeuButton
-              size="sm"
-              variant="danger"
-              onClick={handleSimulateConflict}
-              title="Sends stale version to test OCC rollback"
-            >
-              Test Conflict
             </NeuButton>
           </div>
         </div>

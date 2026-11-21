@@ -69,9 +69,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </NeuButton>
           )}
 
-          <NeuThemeSelect />
-
           <WalletBadge sessionToken={sessionToken} />
+          
+          <NeuThemeSelect />
 
           <UserAvatar
             name={userName}
