@@ -125,8 +125,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     permission: pushPermission,
     isEnabled: isPushEnabled,
     isLoading: isPushLoading,
+    isTesting: isPushTesting,
     enablePush,
     disablePush,
+    sendTestNotification,
   } = usePushNotifications(sessionToken);
 
   const handleTogglePush = async () => {
@@ -142,6 +144,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       toast.error(
         err instanceof Error ? err.message : "Could not update push settings",
       );
+    }
+  };
+
+  const handleSendTestPush = async () => {
+    try {
+      const res = await sendTestNotification();
+      toast.success(
+        `Test notification sent to ${res.delivered} active device(s)!`,
+      );
+    } catch (err: unknown) {
+      toast.error(parseConvexError(err));
     }
   };
 
@@ -365,6 +378,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               disabled={!isPushSupported || isPushLoading}
               onChange={handleTogglePush}
             />
+
+            {isPushEnabled && (
+                <div className="flex justify-end px-1">
+                  <NeuButton
+                    type="button"
+                    size="sm"
+                    disabled={isPushTesting}
+                    onClick={handleSendTestPush}
+                    className="text-xs font-bold text-neu-accent flex items-center gap-1.5"
+                  >
+                    <BellRing className="w-3.5 h-3.5" />
+                    <span>
+                      {isPushTesting
+                        ? "Sending Test Alert..."
+                        : "Send Test Push Notification"}
+                    </span>
+                  </NeuButton>
+                </div>
+              )}
 
             <SettingToggleCard
               icon={Volume2}

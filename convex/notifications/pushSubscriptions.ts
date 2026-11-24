@@ -3,7 +3,6 @@ import { mutation, query, internalQuery, internalMutation } from "../_generated/
 import { v } from "convex/values";
 import { authenticate } from "../common/auth";
 
-// 1. Save or update browser push subscription for current user
 export const subscribe = mutation({
   args: {
     sessionToken: v.string(),
@@ -16,7 +15,6 @@ export const subscribe = mutation({
     const user = await authenticate(ctx, args.sessionToken);
     const now = Date.now();
 
-    // Check if this browser endpoint already exists
     const existing = await ctx.db
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
@@ -45,7 +43,6 @@ export const subscribe = mutation({
   },
 });
 
-// 2. Remove subscription when user turns off push on this device
 export const unsubscribe = mutation({
   args: {
     sessionToken: v.string(),
@@ -67,7 +64,6 @@ export const unsubscribe = mutation({
   },
 });
 
-// 3. Check if current device endpoint is registered in DB
 export const isEndpointSubscribed = query({
   args: {
     sessionToken: v.string(),
@@ -86,7 +82,19 @@ export const isEndpointSubscribed = query({
   },
 });
 
-// 4. Internal: Fetch all active device subscriptions for a user
+export const resolveUserFromToken = internalQuery({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.sessionToken) return null;
+    const session = await ctx.db
+      .query("userSessions")
+      .withIndex("by_token", (q) => q.eq("token", args.sessionToken))
+      .first();
+    if (!session || session.expiresAt < Date.now()) return null;
+    return { userId: session.userId };
+  },
+});
+
 export const getUserSubscriptions = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -97,7 +105,6 @@ export const getUserSubscriptions = internalQuery({
   },
 });
 
-// 5. Internal: Delete dead/expired subscription (HTTP 404 / 410 Gone)
 export const deleteStaleSubscription = internalMutation({
   args: { subscriptionId: v.id("pushSubscriptions") },
   handler: async (ctx, args) => {

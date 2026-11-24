@@ -4,11 +4,9 @@ import { clientsClaim } from "workbox-core";
 
 declare let self: ServiceWorkerGlobalScope;
 
-// Auto-activate updated SW immediately
 self.skipWaiting();
 clientsClaim();
 
-// Precache Vite build assets & clean old caches
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
@@ -19,7 +17,7 @@ interface PushPayload {
   tag?: string;
 }
 
-// 1. Background Push Listener (Runs even when app/browser is closed)
+// 1. Background Push Listener
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -31,11 +29,15 @@ self.addEventListener("push", (event) => {
   }
 
   const title = data.title ?? "Habit Pulse Reminder";
-  const options: NotificationOptions = {
+  const tag = data.tag ?? "habit-pulse-reminder";
+
+  const options: NotificationOptions & { renotify?: boolean; vibrate?: number[] } = {
     body: data.body ?? "Time to complete your habit!",
     icon: "/pwa-192x192.png",
     badge: "/badge-96x96.png",
-    tag: data.tag ?? "habit-pulse-reminder",
+    tag,
+    renotify: true,
+    vibrate: [150, 75, 150],
     data: {
       url: data.url ?? "/",
     },
@@ -44,7 +46,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 2. Notification Tap Listener (Opens or focuses Habit Pulse PWA)
+// 2. Notification Tap Listener
 self.addEventListener("notificationclick", (event) => {
   const targetPath = (event.notification.data?.url as string) || "/";
   const fullTargetUrl = new URL(targetPath, self.location.origin).href;
@@ -58,7 +60,6 @@ self.addEventListener("notificationclick", (event) => {
         includeUncontrolled: true,
       });
 
-      // 1. Try focusing an active, unfrozen Habit Pulse window
       for (const client of windowClients) {
         if (client.url.startsWith(self.location.origin) && "focus" in client) {
           try {
@@ -68,15 +69,30 @@ self.addEventListener("notificationclick", (event) => {
             const focusedClient = await client.focus();
             if (focusedClient) return;
           } catch {
-            // If client was frozen/discarded by mobile OS, fall through to openWindow
+            // Fall through to openWindow
           }
         }
       }
 
-      // 2. Cold start or frozen client fallback: open PWA window directly
       if (self.clients.openWindow) {
         await self.clients.openWindow(fullTargetUrl);
       }
     })()
+  );
+});
+
+// 3. Auto-renew subscription if browser rotates push keys
+self.addEventListener("pushsubscriptionchange", (event: Event) => {
+  const pushEvent = event as ExtendableEvent & {
+    oldSubscription?: PushSubscription;
+  };
+  const appServerKey = pushEvent.oldSubscription?.options?.applicationServerKey;
+  if (!appServerKey) return;
+
+  pushEvent.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: appServerKey,
+    })
   );
 });

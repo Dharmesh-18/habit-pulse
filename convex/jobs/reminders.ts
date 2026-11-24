@@ -1,4 +1,4 @@
-// convex/habits/reminders.ts
+// convex/jobs/reminders.ts
 import { internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
@@ -22,7 +22,6 @@ export const getHabitReminderStatus = internalQuery({
   },
   handler: async (ctx, args) => {
     const habit = await ctx.db.get(args.habitId);
-    // Agar habit delete ya archive ho chuki hai, to null return hoga
     if (!habit || habit.isArchived || !habit.reminderTime) return null;
 
     const user = await ctx.db.get(habit.userId);
@@ -51,7 +50,7 @@ export const sendHabitReminder = internalAction({
     userEmail: v.string(),
     todayDate: v.string(),
     scheduledTimestamp: v.optional(v.number()),
-    expectedReminderTime: v.optional(v.string()), // Stale job guard
+    expectedReminderTime: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const status = await ctx.runQuery(
@@ -62,7 +61,6 @@ export const sendHabitReminder = internalAction({
       },
     );
 
-    // 1. Stop chain permanently if habit was deleted, archived, or reminder cleared
     if (!status) {
       console.log(
         `[ReminderChain] Stopped for habit ${args.habitId} (deleted/archived/no reminder).`,
@@ -70,7 +68,6 @@ export const sendHabitReminder = internalAction({
       return;
     }
 
-    // 2. Self-Invalidation Guard: Ignore stale jobs from an older reminderTime
     if (
       args.expectedReminderTime &&
       args.expectedReminderTime !== status.reminderTime
@@ -81,7 +78,6 @@ export const sendHabitReminder = internalAction({
       return;
     }
 
-    // 3. Send email only if habit isn't completed today
     if (!status.isCompleted) {
       const pushBody = getReminderMessage({
         title: status.title,
@@ -90,7 +86,7 @@ export const sendHabitReminder = internalAction({
         userName: status.userName,
       });
 
-      await Promise.allSettled([
+      const results = await Promise.allSettled([
         ctx.runAction(
           internal.notifications.actions.sendHabitReminderNotification,
           {
@@ -100,7 +96,7 @@ export const sendHabitReminder = internalAction({
             habitTitle: status.title,
             category: status.category,
             reminderTime: status.reminderTime,
-          }
+          },
         ),
         ctx.runAction(internal.notifications.webPush.sendPushToUser, {
           userId: status.userId,
@@ -110,13 +106,21 @@ export const sendHabitReminder = internalAction({
           tag: `habit-${args.habitId}`,
         }),
       ]);
+
+      results.forEach((res, idx) => {
+        if (res.status === "rejected") {
+          console.error(
+            `[ReminderChain] ${idx === 0 ? "Email" : "WebPush"} failed for "${status.title}":`,
+            res.reason,
+          );
+        }
+      });
     } else {
       console.log(
-        `[ReminderChain] Habit "${status.title}" already completed for ${args.todayDate}. Skipping email.`,
+        `[ReminderChain] Habit "${status.title}" already completed for ${args.todayDate}. Skipping notification.`,
       );
     }
 
-    // 4. Schedule tomorrow's reminder with current active reminderTime
     const baseTime = args.scheduledTimestamp ?? Date.now();
     const nextTimestamp = baseTime + ONE_DAY_MS;
     const tomorrowDateKey = getNextDateKey(args.todayDate);
@@ -135,16 +139,6 @@ export const sendHabitReminder = internalAction({
 
     console.log(
       `[ReminderChain] Scheduled next reminder for "${status.title}" on ${tomorrowDateKey} at ${status.reminderTime}`,
-    );
-  },
-});
-
-export const triggerDailyReminders = internalAction({
-  args: {},
-  handler: async () => {
-    console.log(
-      "[CRON] Hourly health check executed at",
-      new Date().toISOString(),
     );
   },
 });
