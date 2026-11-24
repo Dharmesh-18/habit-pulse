@@ -268,6 +268,7 @@ export const toggleToday = mutation({
         currentStreak: 0,
         longestStreak: habit.longestStreak ?? 0,
         newlyUnlockedMilestones: [] as number[],
+        firstTimeUserMilestones: [] as number[],
       };
     }
 
@@ -306,11 +307,27 @@ export const toggleToday = mutation({
       await ctx.db.patch(habit._id, { longestStreak: nextLongest });
     }
 
+    // Check milestones already unlocked across ANY habit for this user
+    const existingUserAchievements = await ctx.db
+      .query("habitAchievements")
+      .withIndex("by_user", (q) => q.eq("userId", user.userId))
+      .collect();
+
+    const previouslyReachedMilestones = new Set<number>(
+      existingUserAchievements.map((a) => a.milestone),
+    );
+
+    // Unlock per-habit milestones
     const newlyUnlockedMilestones = await unlockEligibleMilestones(ctx, {
       userId: user.userId,
       habitId: habit._id,
       streakToCheck: currentStreak,
     });
+
+    // Filter only brand-new global milestones (for account-wide theme unlocks)
+    const firstTimeUserMilestones = newlyUnlockedMilestones.filter(
+      (m) => !previouslyReachedMilestones.has(m),
+    );
 
     const milestoneBonus = computeMilestoneBonusCoins(newlyUnlockedMilestones);
     const totalCoinsEarned = HABIT_COMPLETION_COINS + milestoneBonus;
@@ -327,6 +344,7 @@ export const toggleToday = mutation({
       currentStreak,
       longestStreak: nextLongest,
       newlyUnlockedMilestones,
+      firstTimeUserMilestones,
       coinsEarned: totalCoinsEarned,
       xpEarned: HABIT_COMPLETION_XP,
     };

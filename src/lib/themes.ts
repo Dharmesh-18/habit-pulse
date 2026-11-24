@@ -176,7 +176,7 @@ export const THEMES: AppTheme[] = [
     iconColor: "text-pink-500",
     description: "Vivid rainbow spectrum & prism crystal",
     swatch: ["#f43f5e", "#0ea5e9"],
-    unlockRule: { type: "streak", minDays: 1 },
+    unlockRule: { type: "streak", minDays: 500 },
     ambientOrbColors: ["rgba(244, 63, 94, 0.16)", "rgba(14, 165, 233, 0.16)"],
   },
   {

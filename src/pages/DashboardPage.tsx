@@ -80,10 +80,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       soundFX.checkHabit();
 
       const unlocked = result?.newlyUnlockedMilestones ?? [];
+      const firstTimeGlobal = result?.firstTimeUserMilestones ?? [];
+
       if (unlocked.length > 0) {
         const highestMilestone = unlocked[unlocked.length - 1];
         const meta = getMilestoneMeta(highestMilestone);
-        const unlockedThemes = unlocked.flatMap((m) =>
+
+        // Sirf tabhi theme unlock check karo jab user ne ye milestone pehli baar hit kiya ho
+        const newlyUnlockedThemes = firstTimeGlobal.flatMap((m) =>
           getThemesUnlockedAtMilestone(m),
         );
 
@@ -95,9 +99,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           origin: { y: 0.65 },
         });
 
-        if (unlockedThemes.length > 0) {
+        if (newlyUnlockedThemes.length > 0) {
           toast.success(
-            `🎉 ${highestMilestone}-Day Streak ("${meta.title}") + New Theme Unlocked: "${unlockedThemes[0].label}"!`,
+            `🎉 ${highestMilestone}-Day Streak ("${meta.title}") + New Theme Unlocked: "${newlyUnlockedThemes[0].label}"!`,
           );
         } else {
           toast.success(

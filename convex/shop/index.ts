@@ -4,16 +4,26 @@ import { v, ConvexError } from "convex/values";
 import { authenticate } from "../common/auth";
 
 export const INITIAL_SHOP_AVATARS = [
-  { itemKey: "avatar-coco", title: "Coco", itemType: "avatar", price: 15, assetPath: "/avatars/coco.svg", sortOrder: 1 },
-  { itemKey: "avatar-poki", title: "Poki", itemType: "avatar", price: 30, assetPath: "/avatars/poki.svg", sortOrder: 2 },
-  { itemKey: "avatar-panda", title: "Panda", itemType: "avatar", price: 50, assetPath: "/avatars/panda.svg", sortOrder: 3 },
-  { itemKey: "avatar-sorci", title: "Sorci", itemType: "avatar", price: 80, assetPath: "/avatars/sorci.svg", sortOrder: 4 },
-  { itemKey: "avatar-knight", title: "Knight", itemType: "avatar", price: 120, assetPath: "/avatars/knight.svg", sortOrder: 5 },
-  { itemKey: "avatar-ninja", title: "Ninja", itemType: "avatar", price: 175, assetPath: "/avatars/ninja.svg", sortOrder: 6 },
-  { itemKey: "avatar-warrior", title: "Warrior", itemType: "avatar", price: 250, assetPath: "/avatars/warrior.svg", sortOrder: 7 },
-  { itemKey: "avatar-angel", title: "Angel", itemType: "avatar", price: 350, assetPath: "/avatars/angel.svg", sortOrder: 8 },
-  { itemKey: "avatar-pirate", title: "Pirate", itemType: "avatar", price: 500, assetPath: "/avatars/pirate.svg", sortOrder: 9 },
-  { itemKey: "avatar-king", title: "King", itemType: "avatar", price: 750, assetPath: "/avatars/king.svg", sortOrder: 10 },
+  { itemKey: "avatar-coco", title: "Coco", itemType: "avatar", price: 100, assetPath: "/avatars/coco.svg", sortOrder: 1 },
+  { itemKey: "avatar-poki", title: "Poki", itemType: "avatar", price: 100, assetPath: "/avatars/poki.svg", sortOrder: 2 },
+  { itemKey: "avatar-charma", title: "Charma", itemType: "avatar", price: 200, assetPath: "/avatars/charma.svg", sortOrder: 3 },
+  { itemKey: "avatar-panda", title: "Panda", itemType: "avatar", price: 250, assetPath: "/avatars/panda.svg", sortOrder: 4 },
+  { itemKey: "avatar-sorci", title: "Sorci", itemType: "avatar", price: 300, assetPath: "/avatars/sorci.svg", sortOrder: 5 },
+  { itemKey: "avatar-magician", title: "Magician", itemType: "avatar", price: 500, assetPath: "/avatars/magician.svg", sortOrder: 6 },
+  { itemKey: "avatar-oracle", title: "Oracle", itemType: "avatar", price: 500, assetPath: "/avatars/oracle.svg", sortOrder: 7 },
+  { itemKey: "avatar-shooter", title: "Shooter", itemType: "avatar", price: 600, assetPath: "/avatars/shooter.svg", sortOrder: 8 },
+  { itemKey: "avatar-soldier", title: "Soldier", itemType: "avatar", price: 600, assetPath: "/avatars/soldier.svg", sortOrder: 9 },
+  { itemKey: "avatar-knight", title: "Knight", itemType: "avatar", price: 700, assetPath: "/avatars/knight.svg", sortOrder: 10 },
+  { itemKey: "avatar-knightess", title: "Knightess", itemType: "avatar", price: 800, assetPath: "/avatars/knightess.svg", sortOrder: 11 },
+  { itemKey: "avatar-ninja", title: "Ninja", itemType: "avatar", price: 1000, assetPath: "/avatars/ninja.svg", sortOrder: 12 },
+  { itemKey: "avatar-warrior", title: "Warrior", itemType: "avatar", price: 1200, assetPath: "/avatars/warrior.svg", sortOrder: 13 },
+  { itemKey: "avatar-samurai", title: "Samurai", itemType: "avatar", price: 1500, assetPath: "/avatars/samurai.svg", sortOrder: 14 },
+  { itemKey: "avatar-king", title: "King", itemType: "avatar", price: 2000, assetPath: "/avatars/king.svg", sortOrder: 15 },
+  { itemKey: "avatar-angel", title: "Angel", itemType: "avatar", price: 2200, assetPath: "/avatars/angel.svg", sortOrder: 16 },
+  { itemKey: "avatar-pirate", title: "Pirate", itemType: "avatar", price: 2500, assetPath: "/avatars/pirate.svg", sortOrder: 17 },
+  { itemKey: "avatar-scientist", title: "Scientist", itemType: "avatar", price: 3000, assetPath: "/avatars/scientist.svg", sortOrder: 18 },
+  { itemKey: "avatar-hanuman", title: "Hanuman", itemType: "avatar", price: 5000, assetPath: "/avatars/hanuman.svg", sortOrder: 19 },
+  { itemKey: "avatar-shiva", title: "Shiva", itemType: "avatar", price: 10000, assetPath: "/avatars/shiva.svg", sortOrder: 20 },
 ];
 
 // Helper function to resolve session token to userId:
