@@ -1,10 +1,12 @@
 // src/pages/DashboardPage.tsx
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { NeuCard } from "../components/ui/NeuCard";
+import { ConfirmActionModal } from "../components/ui/ConfirmActionModal";
 import { CreateHabitCard } from "../components/habit/CreateHabitCard";
 import { HabitMatrix, type HabitItem } from "../components/habit/HabitMatrix";
 import { ConsistencyGraphCard } from "../components/habit/ConsistencyGraphCard";
@@ -22,9 +24,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   sessionToken,
 }) => {
   const toast = useToast();
+  const navigate = useNavigate();
+
+  const [freezeTarget, setFreezeTarget] = useState<{
+    habit: HabitItem;
+    date: string;
+    yesterdayDate: string;
+    dayBeforeYesterdayDate: string;
+  } | null>(null);
+  const [isFreezing, setIsFreezing] = useState(false);
 
   const habits = useQuery(
     api.habits.index.listWithLogs,
+    sessionToken ? { sessionToken } : "skip",
+  );
+
+  const wallet = useQuery(
+    api.shop.index.getMyWallet,
     sessionToken ? { sessionToken } : "skip",
   );
 
@@ -57,6 +73,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   });
 
+  const useStreakFreezeMutation = useMutation(
+    api.habits.index.useStreakFreeze,
+  );
   const updateHabitMutation = useMutation(
     api.habits.index.updateWithVersionCheck,
   );
@@ -66,7 +85,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     if (!habits) return;
     const targetHabit = habits.find((h) => h._id === id);
 
-    // One-way guard: already completed habits cannot be unchecked
     if (targetHabit?.logs?.[date]) {
       return;
     }
@@ -86,7 +104,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         const highestMilestone = unlocked[unlocked.length - 1];
         const meta = getMilestoneMeta(highestMilestone);
 
-        // Sirf tabhi theme unlock check karo jab user ne ye milestone pehli baar hit kiya ho
         const newlyUnlockedThemes = firstTimeGlobal.flatMap((m) =>
           getThemesUnlockedAtMilestone(m),
         );
@@ -115,6 +132,52 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       return result;
     } catch (err: unknown) {
       toast.error(parseConvexError(err));
+    }
+  };
+
+  const handleOpenFreezeModal = (
+    habit: HabitItem,
+    date: string,
+    yesterdayDate: string,
+    dayBeforeYesterdayDate: string,
+  ) => {
+    const shields = wallet?.shields ?? 0;
+    if (shields < 1) {
+      toast.error(
+        "No Streak Freeze Shields left! Get one in the Shop (75 Coins).",
+      );
+      navigate("/shop");
+      return;
+    }
+
+    setFreezeTarget({
+      habit,
+      date,
+      yesterdayDate,
+      dayBeforeYesterdayDate,
+    });
+  };
+
+  const handleConfirmFreeze = async () => {
+    if (!freezeTarget) return;
+    try {
+      setIsFreezing(true);
+      const res = await useStreakFreezeMutation({
+        sessionToken,
+        habitId: freezeTarget.habit._id as Id<"habits">,
+        date: freezeTarget.date,
+        yesterdayDate: freezeTarget.yesterdayDate,
+        dayBeforeYesterdayDate: freezeTarget.dayBeforeYesterdayDate,
+      });
+      soundFX.achievementUnlock();
+      toast.success(
+        `❄️ Streak saved for "${res.habitTitle}"! (${res.remainingShields}/3 shields left)`,
+      );
+      setFreezeTarget(null);
+    } catch (err: unknown) {
+      toast.error(parseConvexError(err));
+    } finally {
+      setIsFreezing(false);
     }
   };
 
@@ -166,6 +229,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <HabitMatrix
               habits={habits as unknown as HabitItem[]}
               onToggleDate={handleToggleDate}
+              onFreezeDate={handleOpenFreezeModal}
               onUpdate={handleUpdateHabit}
               onDelete={handleDeleteHabit}
             />
@@ -174,6 +238,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </>
         )}
       </main>
+
+      {/* Streak Freeze Shield Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={freezeTarget !== null}
+        variant="primary"
+        title="Use Streak Freeze Shield? ❄️"
+        description={`Use 1 Streak Freeze Shield (${wallet?.shields ?? 0}/3 available) to protect "${freezeTarget?.habit.title}" for yesterday (${freezeTarget?.date})? Your streak stays intact and advances once you complete today!`}
+        confirmLabel="Apply Freeze Shield"
+        isLoading={isFreezing}
+        onConfirm={handleConfirmFreeze}
+        onCancel={() => setFreezeTarget(null)}
+      />
     </div>
   );
 };

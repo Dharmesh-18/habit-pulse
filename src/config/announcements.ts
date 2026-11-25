@@ -17,14 +17,14 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-20-ai-reports-v1",
+  id: "2026-11-25-streak-freeze-v1",
   badge: "NEW",
-  title: "AI Generated Report!",
+  title: "Streak Freeze!",
   description:
-    "Get your AI generated report on weekly and monthly basis for performance tracking!",
+    "Freeze a missed day, continue your streaks!",
   action: {
-    label: "Get Mine",
-    targetView: "profile",
+    label: "Buy Freeze Sheild!",
+    targetView: "shop",
   },
   isActive: true,
 };

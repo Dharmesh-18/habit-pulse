@@ -3,6 +3,19 @@ import { mutation, query } from "../_generated/server";
 import { v, ConvexError } from "convex/values";
 import { authenticate } from "../common/auth";
 
+export const MAX_STREAK_SHIELDS = 3;
+
+export const INITIAL_SHOP_POWERUPS = [
+  {
+    itemKey: "powerup-streak-freeze",
+    title: "Streak Freeze Shield",
+    itemType: "powerup",
+    price: 75,
+    assetPath: "/avatars/shield.svg",
+    sortOrder: 0,
+  },
+];
+
 export const INITIAL_SHOP_AVATARS = [
   { itemKey: "avatar-coco", title: "Coco", itemType: "avatar", price: 100, assetPath: "/avatars/coco.svg", sortOrder: 1 },
   { itemKey: "avatar-poki", title: "Poki", itemType: "avatar", price: 100, assetPath: "/avatars/poki.svg", sortOrder: 2 },
@@ -26,7 +39,8 @@ export const INITIAL_SHOP_AVATARS = [
   { itemKey: "avatar-shiva", title: "Shiva", itemType: "avatar", price: 10000, assetPath: "/avatars/shiva.svg", sortOrder: 20 },
 ];
 
-// Helper function to resolve session token to userId:
+const ALL_INITIAL_SHOP_ITEMS = [...INITIAL_SHOP_POWERUPS, ...INITIAL_SHOP_AVATARS];
+
 async function resolveSessionUserId(ctx: any, sessionToken?: string) {
   if (!sessionToken) return null;
   const session = await ctx.db
@@ -37,13 +51,12 @@ async function resolveSessionUserId(ctx: any, sessionToken?: string) {
   return session.userId;
 }
 
-// 1. Reactive Wallet Query (Never crashes UI on empty/stale token)
 export const getMyWallet = query({
   args: { sessionToken: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await resolveSessionUserId(ctx, args.sessionToken);
     if (!userId) {
-      return { coins: 0, xp: 0, boughtItems: [] as string[] };
+      return { coins: 0, xp: 0, shields: 0, boughtItems: [] as string[] };
     }
 
     const wallet = await ctx.db
@@ -54,12 +67,12 @@ export const getMyWallet = query({
     return {
       coins: wallet?.coins ?? 0,
       xp: wallet?.xp ?? 0,
+      shields: wallet?.shields ?? 0,
       boughtItems: wallet?.boughtItems ?? [],
     };
   },
 });
 
-// 2. Get Active Shop Items
 export const listShopItems = query({
   args: {
     sessionToken: v.optional(v.string()),
@@ -85,13 +98,12 @@ export const listShopItems = query({
   },
 });
 
-// 3. Idempotent Seeder (Safe to call on Shop mount if DB is empty)
 export const ensureShopSeeded = mutation({
   args: { sessionToken: v.string() },
   handler: async (ctx, args) => {
     await authenticate(ctx, args.sessionToken);
 
-    for (const item of INITIAL_SHOP_AVATARS) {
+    for (const item of ALL_INITIAL_SHOP_ITEMS) {
       const existing = await ctx.db
         .query("shopItems")
         .withIndex("by_item_key", (q) => q.eq("itemKey", item.itemKey))
@@ -108,7 +120,6 @@ export const ensureShopSeeded = mutation({
   },
 });
 
-// 4. Atomic Purchase Mutation
 export const buyItem = mutation({
   args: {
     sessionToken: v.string(),
@@ -132,8 +143,63 @@ export const buyItem = mutation({
       .first();
 
     const currentCoins = wallet?.coins ?? 0;
+    const currentShields = wallet?.shields ?? 0;
     const boughtItems = wallet?.boughtItems ?? [];
 
+    // Consumable Power-Up Purchase (Max 3 Shields allowed)
+    if (item.itemType === "powerup") {
+      if (currentShields >= MAX_STREAK_SHIELDS) {
+        throw new ConvexError(
+          `Maximum ${MAX_STREAK_SHIELDS} Streak Freeze Shields allowed in inventory!`
+        );
+      }
+
+      if (currentCoins < item.price) {
+        throw new ConvexError(
+          `Not enough coins! You need ${item.price - currentCoins} more coins.`
+        );
+      }
+
+      const now = Date.now();
+      const updatedCoins = currentCoins - item.price;
+      const updatedShields = currentShields + 1;
+
+      if (wallet) {
+        await ctx.db.patch(wallet._id, {
+          coins: updatedCoins,
+          shields: updatedShields,
+          updatedAt: now,
+        });
+      } else {
+        await ctx.db.insert("userWallets", {
+          userId: user.userId,
+          coins: updatedCoins,
+          xp: 0,
+          shields: updatedShields,
+          boughtItems: [],
+          updatedAt: now,
+        });
+      }
+
+      await ctx.db.insert("coinTransactions", {
+        userId: user.userId,
+        type: "shop_spend",
+        coinsDelta: -item.price,
+        referenceId: `${item.itemKey}-${now}`,
+        description: `Purchased ${item.title} (${updatedShields}/${MAX_STREAK_SHIELDS})`,
+        createdAt: now,
+      });
+
+      return {
+        success: true,
+        remainingCoins: updatedCoins,
+        shields: updatedShields,
+        itemKey: item.itemKey,
+        title: item.title,
+      };
+    }
+
+    // One-Time Avatar Purchase
     if (boughtItems.includes(item.itemKey)) {
       throw new ConvexError(`You already own "${item.title}"!`);
     }
@@ -144,6 +210,7 @@ export const buyItem = mutation({
       );
     }
 
+    const now = Date.now();
     const updatedCoins = currentCoins - item.price;
     const updatedBought = [...boughtItems, item.itemKey];
 
@@ -151,21 +218,32 @@ export const buyItem = mutation({
       await ctx.db.patch(wallet._id, {
         coins: updatedCoins,
         boughtItems: updatedBought,
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
     } else {
       await ctx.db.insert("userWallets", {
         userId: user.userId,
         coins: updatedCoins,
         xp: 0,
+        shields: currentShields,
         boughtItems: updatedBought,
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
     }
+
+    await ctx.db.insert("coinTransactions", {
+      userId: user.userId,
+      type: "shop_spend",
+      coinsDelta: -item.price,
+      referenceId: `${item.itemKey}-${now}`,
+      description: `Purchased Avatar: ${item.title}`,
+      createdAt: now,
+    });
 
     return {
       success: true,
       remainingCoins: updatedCoins,
+      shields: currentShields,
       itemKey: item.itemKey,
       title: item.title,
     };

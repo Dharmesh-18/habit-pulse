@@ -8,10 +8,8 @@ export const STREAK_MILESTONES = [
 
 export type MilestoneDay = (typeof STREAK_MILESTONES)[number];
 
-/**
- * Shift a "YYYY-MM-DD" date string by `deltaDays` using pure UTC calendar math
- * (immune to DST or server timezone shifts).
- */
+export type StreakLogInput = string | { date: string; isFrozen?: boolean };
+
 export function shiftDateKey(dateKey: string, deltaDays: number): string {
   const [y, m, d] = dateKey.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d + deltaDays));
@@ -21,44 +19,58 @@ export function shiftDateKey(dateKey: string, deltaDays: number): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/**
- * Computes current contiguous streak (ending at `todayDate` or `yesterdayDate`)
- * and all-time longest contiguous streak from a set of completed "YYYY-MM-DD" strings.
- */
 export function calculateStreakStats(
-  completedDates: Iterable<string>,
+  entries: Iterable<StreakLogInput>,
   todayDate: string,
 ): { currentStreak: number; longestStreak: number } {
-  const dateSet = new Set(completedDates);
-  if (dateSet.size === 0) {
+  const completedSet = new Set<string>();
+  const frozenSet = new Set<string>();
+
+  for (const entry of entries) {
+    if (typeof entry === "string") {
+      completedSet.add(entry);
+    } else if (entry.isFrozen) {
+      frozenSet.add(entry.date);
+    } else {
+      completedSet.add(entry.date);
+    }
+  }
+
+  if (completedSet.size === 0 && frozenSet.size === 0) {
     return { currentStreak: 0, longestStreak: 0 };
   }
 
-  // 1. Current streak: anchor at today if completed, otherwise yesterday
+  const hasActivity = (date: string) =>
+    completedSet.has(date) || frozenSet.has(date);
+
+  // 1. Current streak: anchor at today if completed/frozen, otherwise yesterday
   const yesterdayDate = shiftDateKey(todayDate, -1);
-  let cursor = dateSet.has(todayDate)
+  let cursor = hasActivity(todayDate)
     ? todayDate
-    : dateSet.has(yesterdayDate)
+    : hasActivity(yesterdayDate)
       ? yesterdayDate
       : null;
 
   let currentStreak = 0;
-  while (cursor && dateSet.has(cursor)) {
-    currentStreak++;
+  while (cursor && hasActivity(cursor)) {
+    // Only real completions add +1; frozen days bridge the streak without inflating count
+    if (completedSet.has(cursor)) {
+      currentStreak++;
+    }
     cursor = shiftDateKey(cursor, -1);
   }
 
   // 2. Longest contiguous streak across all history
-  const sortedDates = Array.from(dateSet).sort(); // ISO YYYY-MM-DD sorts lexicographically
-  let longestStreak = 0;
+  const sortedDates = Array.from(new Set([...completedSet, ...frozenSet])).sort();
+  let longestStreak = currentStreak;
   let running = 0;
   let prevDate: string | null = null;
 
   for (const d of sortedDates) {
     if (prevDate && shiftDateKey(prevDate, 1) === d) {
-      running++;
+      if (completedSet.has(d)) running++;
     } else {
-      running = 1;
+      running = completedSet.has(d) ? 1 : 0;
     }
     if (running > longestStreak) {
       longestStreak = running;
@@ -69,10 +81,6 @@ export function calculateStreakStats(
   return { currentStreak, longestStreak };
 }
 
-/**
- * Idempotently unlocks any milestones <= `streakToCheck` that haven't been saved yet.
- * Returns the newly unlocked milestone numbers (sorted ascending).
- */
 export async function unlockEligibleMilestones(
   ctx: MutationCtx,
   params: {

@@ -35,6 +35,8 @@ export const listWithLogs = query({
 
     // Group logs by habitId
     const logsByHabit = new Map<string, Record<string, boolean>>();
+    const frozenByHabit = new Map<string, Record<string, boolean>>();
+    
     for (const log of allUserLogs) {
       if (habitIds.has(log.habitId)) {
         const idStr = log.habitId;
@@ -42,12 +44,20 @@ export const listWithLogs = query({
           logsByHabit.set(idStr, {});
         }
         logsByHabit.get(idStr)![log.date] = log.completed;
+
+        if (log.completed && log.isFrozen) {
+          if (!frozenByHabit.has(idStr)) {
+            frozenByHabit.set(idStr, {});
+          }
+          frozenByHabit.get(idStr)![log.date] = true;
+        }
       }
     }
 
     return habits.map((habit) => ({
       ...habit,
       logs: logsByHabit.get(habit._id) ?? {},
+      frozenDates: frozenByHabit.get(habit._id) ?? {},
     }));
   },
 });
@@ -293,12 +303,12 @@ export const toggleToday = mutation({
       .withIndex("by_habit_date", (q) => q.eq("habitId", args.habitId))
       .collect();
 
-    const completedDates = habitLogs
+    const completedEntries = habitLogs
       .filter((l) => l.completed)
-      .map((l) => l.date);
+      .map((l) => ({ date: l.date, isFrozen: l.isFrozen }));
 
     const { currentStreak, longestStreak } = calculateStreakStats(
-      completedDates,
+      completedEntries,
       args.date,
     );
 
@@ -417,3 +427,94 @@ function computeNextReminderSchedule(
     targetDateKey: `${yyyy}-${mm}-${dd}`,
   };
 }
+
+// Use Streak Freeze
+export const useStreakFreeze = mutation({
+  args: {
+    sessionToken: v.string(),
+    habitId: v.id("habits"),
+    date: v.string(), // Must match yesterdayDate
+    yesterdayDate: v.string(),
+    dayBeforeYesterdayDate: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await authenticate(ctx, args.sessionToken);
+
+    if (args.date !== args.yesterdayDate) {
+      throw new ConvexError(
+        "Streak Freeze Shield can only be used on yesterday's missed day.",
+      );
+    }
+
+    const habit = await ctx.db.get(args.habitId);
+    if (!habit || habit.userId !== user.userId || habit.isArchived) {
+      throw new ConvexError("Habit not found or unauthorized.");
+    }
+
+    const wallet = await ctx.db
+      .query("userWallets")
+      .withIndex("by_user", (q) => q.eq("userId", user.userId))
+      .first();
+
+    const currentShields = wallet?.shields ?? 0;
+    if (!wallet || currentShields < 1) {
+      throw new ConvexError(
+        "No Streak Freeze Shields left! Buy one in the Shop (75 Coins).",
+      );
+    }
+
+    const existingYesterday = await ctx.db
+      .query("habitLogs")
+      .withIndex("by_habit_date", (q) =>
+        q.eq("habitId", args.habitId).eq("date", args.yesterdayDate),
+      )
+      .first();
+
+    if (existingYesterday?.completed) {
+      throw new ConvexError("This day is already completed or frozen.");
+    }
+
+    const dayBeforeLog = await ctx.db
+      .query("habitLogs")
+      .withIndex("by_habit_date", (q) =>
+        q.eq("habitId", args.habitId).eq("date", args.dayBeforeYesterdayDate),
+      )
+      .first();
+
+    if (!dayBeforeLog?.completed) {
+      throw new ConvexError("No active streak to protect on this habit.");
+    }
+
+    const now = Date.now();
+
+    // Deduct 1 Shield from wallet
+    await ctx.db.patch(wallet._id, {
+      shields: currentShields - 1,
+      updatedAt: now,
+    });
+
+    // Save frozen bridge log (does NOT award XP/coins or increment streak count)
+    if (existingYesterday) {
+      await ctx.db.patch(existingYesterday._id, {
+        completed: true,
+        isFrozen: true,
+        timestamp: now,
+      });
+    } else {
+      await ctx.db.insert("habitLogs", {
+        habitId: args.habitId,
+        userId: user.userId,
+        date: args.yesterdayDate,
+        completed: true,
+        isFrozen: true,
+        timestamp: now,
+      });
+    }
+
+    return {
+      success: true,
+      remainingShields: currentShields - 1,
+      habitTitle: habit.title,
+    };
+  },
+});

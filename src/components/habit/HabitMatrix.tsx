@@ -14,6 +14,7 @@ import {
   Trash2,
   AlertTriangle,
   Calendar,
+  Snowflake,
 } from "lucide-react";
 import { cn, getDaysInMonth } from "../../lib/utils";
 import { getCategoryMeta } from "../../lib/categories";
@@ -33,11 +34,18 @@ export interface HabitItem {
   version: number;
   customImageStorageId?: Id<"_storage">;
   logs: Record<string, boolean>;
+  frozenDates?: Record<string, boolean>;
 }
 
 interface HabitMatrixProps {
   habits: HabitItem[];
   onToggleDate: (habitId: string, date: string) => Promise<unknown>;
+  onFreezeDate: (
+    habit: HabitItem,
+    date: string,
+    yesterdayDate: string,
+    dayBeforeYesterdayDate: string,
+  ) => void;
   onUpdate: (
     habitId: string,
     title: string,
@@ -46,6 +54,13 @@ interface HabitMatrixProps {
     reminderTime?: string,
   ) => Promise<void>;
   onDelete: (habitId: string) => Promise<void>;
+}
+
+function formatLocalDateKey(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 const HabitThumbnail: React.FC<{ storageId?: Id<"_storage"> }> = ({
@@ -68,6 +83,7 @@ const HabitThumbnail: React.FC<{ storageId?: Id<"_storage"> }> = ({
 export const HabitMatrix: React.FC<HabitMatrixProps> = ({
   habits,
   onToggleDate,
+  onFreezeDate,
   onUpdate,
   onDelete,
 }) => {
@@ -78,7 +94,18 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
 
-  // Modal States (holding the active habit object)
+  // Compute yesterday & day-before-yesterday keys for Streak Freeze detection
+  const { yesterdayDateStr, dayBeforeYesterdayDateStr } = useMemo(() => {
+    const yest = new Date();
+    yest.setDate(yest.getDate() - 1);
+    const dayBefore = new Date();
+    dayBefore.setDate(dayBefore.getDate() - 2);
+    return {
+      yesterdayDateStr: formatLocalDateKey(yest),
+      dayBeforeYesterdayDateStr: formatLocalDateKey(dayBefore),
+    };
+  }, []);
+
   const [editingHabit, setEditingHabit] = useState<HabitItem | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState("Health");
@@ -194,7 +221,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                 {monthYearLabel}
               </h2>
               <p className="text-[11px] text-neu-muted truncate">
-                Tap today&apos;s cell to log
+                Tap today&apos;s cell to log • Tap ❄️ to freeze missed yesterday
               </p>
             </div>
           </div>
@@ -267,17 +294,18 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
               {habits.map((habit) => {
                 const catMeta = getCategoryMeta(habit.category);
                 const CategoryIcon = catMeta.icon;
+                const hadActiveStreakBeforeYesterday =
+                  habit.logs[dayBeforeYesterdayDateStr] === true;
 
                 return (
                   <tr
                     key={habit._id}
                     className="group hover:bg-black/[0.015] transition-colors"
                   >
-                    {/* Sticky Habit Info Cell: Compact on Mobile, Expanded on Desktop */}
+                    {/* Sticky Habit Info Cell */}
                     <td className="sticky left-0 z-10 bg-neu-bg px-2.5 sm:px-5 py-2.5 sm:py-3 w-[154px] min-w-[154px] max-w-[154px] sm:w-[235px] sm:min-w-[235px] sm:max-w-[235px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]">
                       <div className="flex items-start sm:items-center justify-between gap-2">
                         <div className="flex items-start sm:items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-                          {/* Category Icon */}
                           <div
                             title={catMeta.label}
                             className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-neu-bg shadow-neu-pressed-sm flex items-center justify-center shrink-0 mt-0.5 sm:mt-0"
@@ -290,7 +318,6 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                             />
                           </div>
 
-                          {/* Title + Full Time + Mobile Action Row */}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
                               <span
@@ -304,7 +331,6 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                               />
                             </div>
 
-                            {/* Meta Row: Full Unclipped Time + Desktop Version */}
                             <div className="flex items-center gap-1.5 text-[10px] text-neu-muted mt-0.5">
                               {habit.reminderTime && (
                                 <span className="flex items-center gap-1 whitespace-nowrap font-medium">
@@ -317,7 +343,6 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                               </span>
                             </div>
 
-                            {/* Mobile-only Edit & Delete Buttons on Clean Separate Row */}
                             <div className="flex sm:hidden items-center gap-1.5 mt-1.5">
                               <button
                                 type="button"
@@ -339,7 +364,6 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                           </div>
                         </div>
 
-                        {/* Desktop-only Right-aligned Quick Actions */}
                         <div className="hidden sm:flex items-center gap-1 shrink-0 opacity-75 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
@@ -364,6 +388,12 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                     {/* Date Grid Cells */}
                     {days.map((day) => {
                       const isDone = habit.logs[day.dateStr] === true;
+                      const isFrozen = habit.frozenDates?.[day.dateStr] === true;
+                      const canFreezeYesterday =
+                        day.dateStr === yesterdayDateStr &&
+                        !isDone &&
+                        hadActiveStreakBeforeYesterday;
+
                       return (
                         <td
                           key={day.dateStr}
@@ -373,31 +403,59 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                           )}
                         >
                           <button
-                            disabled={!day.isToday || isDone}
+                            disabled={
+                              (!day.isToday && !canFreezeYesterday) || isDone
+                            }
                             type="button"
-                            onClick={() => onToggleDate(habit._id, day.dateStr)}
+                            onClick={() => {
+                              if (canFreezeYesterday) {
+                                onFreezeDate(
+                                  habit,
+                                  day.dateStr,
+                                  yesterdayDateStr,
+                                  dayBeforeYesterdayDateStr,
+                                );
+                                return;
+                              }
+                              onToggleDate(habit._id, day.dateStr);
+                            }}
                             title={
-                              day.isToday
-                                ? `${habit.title} — Today: ${
-                                    isDone ? "Completed" : "Mark Done"
-                                  }`
-                                : `${habit.title} — ${day.dateStr} (${
-                                    isDone ? "Completed" : "Locked"
-                                  })`
+                              isFrozen
+                                ? `${habit.title} — Protected with Streak Freeze Shield ❄️`
+                                : canFreezeYesterday
+                                  ? `${habit.title} — Streak at risk! Tap to apply Streak Freeze Shield ❄️`
+                                  : day.isToday
+                                    ? `${habit.title} — Today: ${
+                                        isDone ? "Completed" : "Mark Done"
+                                      }`
+                                    : `${habit.title} — ${day.dateStr} (${
+                                        isDone ? "Completed" : "Locked"
+                                      })`
                             }
                             className={cn(
                               "w-8 h-8 sm:w-7 sm:h-7 rounded-lg mx-auto flex items-center justify-center transition-all duration-200 outline-none",
-                              !day.isToday && "opacity-50 cursor-not-allowed",
-                              isDone
-                                ? "bg-neu-accent text-white shadow-[0_0_8px_rgba(79,70,229,0.45)] scale-105"
-                                : cn(
-                                    "bg-neu-bg shadow-neu-pressed-sm text-transparent",
-                                    day.isToday &&
-                                      "hover:shadow-neu-flat-sm hover:text-neu-accent/40",
-                                  ),
+                              !day.isToday &&
+                                !canFreezeYesterday &&
+                                !isFrozen &&
+                                "opacity-50 cursor-not-allowed",
+                              isFrozen
+                                ? "bg-sky-500 text-white shadow-[0_0_8px_rgba(14,165,233,0.45)] scale-105 cursor-default"
+                                : isDone
+                                  ? "bg-neu-accent text-white shadow-[0_0_8px_rgba(79,70,229,0.45)] scale-105"
+                                  : canFreezeYesterday
+                                    ? "bg-sky-500/15 text-sky-500 shadow-neu-flat-sm hover:bg-sky-500/25 active:shadow-neu-pressed cursor-pointer"
+                                    : cn(
+                                        "bg-neu-bg shadow-neu-pressed-sm text-transparent",
+                                        day.isToday &&
+                                          "hover:shadow-neu-flat-sm hover:text-neu-accent/40",
+                                      ),
                             )}
                           >
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            {isFrozen || canFreezeYesterday ? (
+                              <Snowflake className="w-3.5 h-3.5 stroke-[2.5]" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            )}
                           </button>
                         </td>
                       );

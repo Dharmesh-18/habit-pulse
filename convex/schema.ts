@@ -49,6 +49,7 @@ export default defineSchema({
     userId: v.id("users"),
     date: v.string(), // "YYYY-MM-DD"
     completed: v.boolean(),
+    isFrozen: v.optional(v.boolean()), // True when protected via Streak Freeze Shield
     timestamp: v.number(),
   })
     .index("by_habit_date", ["habitId", "date"])
@@ -90,6 +91,7 @@ export default defineSchema({
     userId: v.id("users"),
     coins: v.number(),
     xp: v.number(),
+    shields: v.optional(v.number()), // Streak Freeze Shield inventory (0 to 3)
     boughtItems: v.array(v.string()), // Array of shopItems.itemKey
     updatedAt: v.number(),
   })
