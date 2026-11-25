@@ -1,5 +1,5 @@
 // src/pages/DashboardPage.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
@@ -15,7 +15,10 @@ import { parseConvexError } from "../lib/errorUtils";
 import { getMilestoneMeta } from "../lib/achievements";
 import { soundFX } from "../lib/soundEffects";
 import { getThemesUnlockedAtMilestone } from "../lib/themes";
+import { Info } from "lucide-react";
+import { FeatureTourModal } from "../components/tour/FeatureTourModal";
 
+const TOUR_STORAGE_KEY = "habit_pulse_tour_seen_v1";
 interface DashboardPageProps {
   sessionToken: string;
 }
@@ -33,6 +36,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     dayBeforeYesterdayDate: string;
   } | null>(null);
   const [isFreezing, setIsFreezing] = useState(false);
+
+  const [isTourOpen, setIsTourOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const seen = localStorage.getItem(TOUR_STORAGE_KEY);
+    if (!seen) {
+      setIsTourOpen(true);
+    }
+  }, []);
+
+  const handleCloseTour = () => {
+    setIsTourOpen(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TOUR_STORAGE_KEY, "true");
+    }
+  };
 
   const habits = useQuery(
     api.habits.index.listWithLogs,
@@ -73,9 +93,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   });
 
-  const useStreakFreezeMutation = useMutation(
-    api.habits.index.useStreakFreeze,
-  );
+  const useStreakFreezeMutation = useMutation(api.habits.index.useStreakFreeze);
   const updateHabitMutation = useMutation(
     api.habits.index.updateWithVersionCheck,
   );
@@ -213,6 +231,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   return (
     <div className="flex flex-col gap-8">
+      <div className="flex items-center justify-between -mb-4">
+        <span className="text-xs font-bold text-neu-muted">
+          Your Daily Command Center
+        </span>
+        <button
+          type="button"
+          onClick={() => setIsTourOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neu-bg shadow-neu-flat-sm active:shadow-neu-pressed text-xs font-bold text-neu-accent hover:opacity-90 transition-all"
+        >
+          <Info className="w-3.5 h-3.5" />
+          <span>App Tour</span>
+        </button>
+      </div>
+
       <CreateHabitCard sessionToken={sessionToken} />
 
       <main className="flex flex-col gap-8 relative z-10">
@@ -250,6 +282,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         onConfirm={handleConfirmFreeze}
         onCancel={() => setFreezeTarget(null)}
       />
+
+      <FeatureTourModal isOpen={isTourOpen} onClose={handleCloseTour} />
     </div>
   );
 };
