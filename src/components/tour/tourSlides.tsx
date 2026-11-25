@@ -6,7 +6,8 @@ import {
   Snowflake,
   Award,
   Store,
-  Sparkles,
+  FileText,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 import { MatrixVisual } from "./slides/MatrixVisual";
@@ -14,7 +15,8 @@ import { RemindersVisual } from "./slides/RemindersVisual";
 import { StreakFreezeVisual } from "./slides/StreakFreezeVisual";
 import { MilestonesVisual } from "./slides/MilestonesVisual";
 import { ShopWalletVisual } from "./slides/ShopWalletVisual";
-import { AiLeaderboardVisual } from "./slides/AiLeaderboardVisual";
+import { AiReportVisual } from "./slides/AiReportVisual";
+import { LeaderboardVisual } from "./slides/LeaderboardVisual";
 
 export interface TourSlideConfig {
   id: string;
@@ -32,7 +34,7 @@ export const TOUR_SLIDES: TourSlideConfig[] = [
     badge: "Core Tracking",
     title: "Daily Habit Grid & Consistency Curve",
     description:
-      "Log habits in one tap on your interactive monthly matrix and watch your daily consistency curve climb in real time.",
+      "Track multiple daily habits on an interactive monthly grid and watch your daily completion percentage plot live on the consistency curve.",
     icon: CalendarCheck2,
     accentColor: "text-neu-accent",
     Visual: MatrixVisual,
@@ -49,7 +51,7 @@ export const TOUR_SLIDES: TourSlideConfig[] = [
   },
   {
     id: "streak-freeze",
-    badge: "New Power-Up",
+    badge: "Streak Protection",
     title: "Streak Freeze Shield ❄️",
     description:
       "Busy day? Tap the snowflake icon on a missed yesterday to bridge your streak chain without losing hard-earned progress.",
@@ -62,29 +64,39 @@ export const TOUR_SLIDES: TourSlideConfig[] = [
     badge: "Progression",
     title: "Streak Milestones, Themes & Share Cards",
     description:
-      "Hit 7, 21, 30, and 100+ day streaks to unlock custom app themes and download shareable achievement cards.",
+      "Hit streak milestones along your progress timeline to unlock custom app themes and shareable achievement cards.",
     icon: Award,
     accentColor: "text-amber-500",
     Visual: MilestonesVisual,
   },
   {
     id: "coins-shop",
-    badge: "Gamified Rewards",
+    badge: "Rewards Shop",
     title: "Earn Coins & XP, Unlock Shop Gear",
     description:
-      "Every check-in awards +5 Coins and +10 XP. Spend coins in the Rewards Shop on Streak Freeze Shields and 20+ collectible avatars.",
+      "Every check-in awards +5 Coins and +10 XP. Spend coins in the Shop on Streak Freeze Shields, 20+ avatars, or top-up coin packs.",
     icon: Store,
     accentColor: "text-emerald-500",
     Visual: ShopWalletVisual,
   },
   {
-    id: "ai-leaderboard",
-    badge: "Insights & Community",
-    title: "AI Pulse Coach Reports & Top 10 Ranks",
+    id: "ai-pulse-report",
+    badge: "AI Insights",
+    title: "AI Pulse Coach PDF Reports",
     description:
-      "Generate personalized weekly & monthly AI performance PDFs and compete on the global Top 10 XP Leaderboard.",
-    icon: Sparkles,
+      "Redeem your earned coins to generate personalized weekly and monthly AI performance PDFs with deep habit breakdowns.",
+    icon: FileText,
     accentColor: "text-purple-500",
-    Visual: AiLeaderboardVisual,
+    Visual: AiReportVisual,
+  },
+  {
+    id: "xp-leaderboard",
+    badge: "Community Ranks",
+    title: "Global Top 10 XP Leaderboard",
+    description:
+      "Stay consistent to grow your total XP and climb the live Top 10 Leaderboard alongside dedicated habit builders.",
+    icon: Trophy,
+    accentColor: "text-amber-600",
+    Visual: LeaderboardVisual,
   },
 ];
