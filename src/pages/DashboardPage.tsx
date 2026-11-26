@@ -17,6 +17,7 @@ import { soundFX } from "../lib/soundEffects";
 import { getThemesUnlockedAtMilestone } from "../lib/themes";
 import { Info } from "lucide-react";
 import { FeatureTourModal } from "../components/tour/FeatureTourModal";
+import { ChallengeSection } from "../components/challenges/ChallengeSection";
 
 const TOUR_STORAGE_KEY = "habit_pulse_tour_seen_v1";
 interface DashboardPageProps {
@@ -246,6 +247,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       <CreateHabitCard sessionToken={sessionToken} />
+
+      <ChallengeSection sessionToken={sessionToken} />
 
       <main className="flex flex-col gap-8 relative z-10">
         {habits === undefined ? (

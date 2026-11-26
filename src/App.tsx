@@ -1,10 +1,9 @@
 // src/App.tsx
 import { useState } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ProtectedShell } from "./components/layout/ProtectedShell";
-import { useLocation } from "react-router-dom";
 import {
   PrivacyPolicyPage,
   TermsPage,
@@ -18,23 +17,47 @@ import { ProfileView } from "./components/profile/ProfileView";
 import { useToast } from "./context/ToastContext";
 import { AchievementsPage } from "./pages/AchievementsPage";
 import { ShopPage } from "./pages/ShopPage";
+import { ChallengesPage } from "./pages/ChallengesPage";
+import { ChallengeInvitePage } from "./pages/ChallengeInvitePage";
 
 export function App() {
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [token, setToken] = useState<string>(
     () => localStorage.getItem("habit_token") || "",
   );
+
+  const handleAuthSuccess = (newToken: string) => {
+    localStorage.setItem("habit_token", newToken);
+    setToken(newToken);
+    const pendingPath = localStorage.getItem("pending_challenge_redirect");
+    if (pendingPath) {
+      localStorage.removeItem("pending_challenge_redirect");
+      navigate(pendingPath, { replace: true });
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
 
   const currentUser = useQuery(api.auth.index.getMe, {
     sessionToken: token || undefined,
   });
 
-  const handleAuthSuccess = (newToken: string) => {
-    localStorage.setItem("habit_token", newToken);
-    setToken(newToken);
-    navigate("/", { replace: true });
-  };
+  // 1. Public Legal Pages (must stay BEFORE auth guard for Razorpay & crawlers)
+  if (location.pathname === "/privacy") return <PrivacyPolicyPage />;
+  if (location.pathname === "/terms") return <TermsPage />;
+  if (location.pathname === "/refunds") return <RefundPolicyPage />;
+  if (location.pathname === "/contact") return <ContactPage />;
+
+  // 2. Auth Guard (preserves /challenge/:inviteCode across login/signup)
+  if (!currentUser) {
+    if (location.pathname.startsWith("/challenge/")) {
+      localStorage.setItem("pending_challenge_redirect", location.pathname);
+    }
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("habit_token");
@@ -42,17 +65,6 @@ export function App() {
     navigate("/", { replace: true });
     toast.info("Logged out successfully");
   };
-
-  const location = useLocation();
-
-  if (location.pathname === "/privacy") return <PrivacyPolicyPage />;
-  if (location.pathname === "/terms") return <TermsPage />;
-  if (location.pathname === "/refunds") return <RefundPolicyPage />;
-  if (location.pathname === "/contact") return <ContactPage />;
-
-  if (!currentUser) {
-    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
-  }
 
   return (
     <Routes>
@@ -68,14 +80,11 @@ export function App() {
         }
       >
         <Route path="/" element={<DashboardPage sessionToken={token} />} />
+        <Route path="/challenges" element={<ChallengesPage sessionToken={token} />} />
+        <Route path="/challenge/:inviteCode" element={<ChallengeInvitePage sessionToken={token} />} />
         <Route path="/achievements" element={<AchievementsPage sessionToken={token} />} />
-        <Route
-          path="/leaderboard"
-          element={<LeaderboardPage sessionToken={token} />}
-        />
-
+        <Route path="/leaderboard" element={<LeaderboardPage sessionToken={token} />} />
         <Route path="/shop" element={<ShopPage sessionToken={token} />} />
-
         <Route
           path="/profile"
           element={
@@ -84,7 +93,6 @@ export function App() {
               sessionToken={token}
               onBack={() => navigate("/")}
               onLogout={handleLogout}
-
             />
           }
         />

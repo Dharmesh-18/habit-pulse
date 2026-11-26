@@ -17,14 +17,14 @@ export interface FeatureAnnouncement {
 }
 
 export const LATEST_ANNOUNCEMENT: FeatureAnnouncement = {
-  id: "2026-11-25-streak-freeze-v1",
+  id: "2026-11-25-challenge-arena-v1",
   badge: "NEW",
-  title: "Streak Freeze!",
+  title: "Challenge Arena!",
   description:
-    "Freeze a missed day, continue your streaks!",
+    "Start a challenge SOLO, Group or Clan, Win Jackpots!",
   action: {
-    label: "Buy Freeze Sheild!",
-    targetView: "shop",
+    label: "Start Challenge!",
+    targetView: "challenges",
   },
   isActive: true,
 };

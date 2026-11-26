@@ -9,6 +9,7 @@ const STORAGE_KEY_PREFIX = "habit_pulse_dismissed_banner_";
 
 const VIEW_ROUTE_MAP: Record<AppView, string> = {
   dashboard: "/",
+  challenges: "/challenges",
   achievements: "/achievements",
   leaderboard: "/leaderboard",
   shop: "/shop",

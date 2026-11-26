@@ -12,7 +12,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { WalletBadge, formatCompactStat } from "./WalletBadge";
 
 export type AppView =
-  "dashboard" | "achievements" | "leaderboard" | "profile" | "shop";
+  "dashboard" | "challenges" | "achievements" | "leaderboard" | "profile" | "shop";
 
 interface AppHeaderProps {
   userName: string;

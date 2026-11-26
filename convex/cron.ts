@@ -9,8 +9,15 @@ crons.daily(
   "daily-midnight-audit",
   { hourUTC: 0, minuteUTC: 0 },
   internal.habits.index.internalResetHabitFlags,
-  // Pass any required internal args or trigger a batch job
   {} as any
+);
+
+// Runs hourly to clean up unaccepted >24h challenge invites & audit missed streaks
+crons.hourly(
+  "hourly-challenge-audit",
+  { minuteUTC: 15 },
+  internal.challenges.index.internalAuditChallenges,
+  {}
 );
 
 export default crons;

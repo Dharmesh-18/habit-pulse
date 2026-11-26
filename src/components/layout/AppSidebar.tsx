@@ -1,7 +1,7 @@
 // src/components/layout/AppSidebar.tsx
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Trophy, UserCircle, Award, Store } from "lucide-react";
+import { LayoutDashboard, Trophy, UserCircle, Award, Store, Rocket } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 interface NavItemConfig {
@@ -13,6 +13,7 @@ interface NavItemConfig {
 
 const NAV_ITEMS: NavItemConfig[] = [
   { to: "/", label: "Dashboard", mobileLabel: "Home", icon: LayoutDashboard },
+  { to: "/challenges", label: "Challenges", mobileLabel: "Arena", icon: Rocket },
   { to: "/achievements", label: "Achievements", mobileLabel: "Awards", icon: Award },
   { to: "/shop", label: "Shop", mobileLabel: "Shop", icon: Store },
   { to: "/leaderboard", label: "Leaderboard", mobileLabel: "Ranks", icon: Trophy },
@@ -56,7 +57,7 @@ export const AppSidebar: React.FC = () => {
         aria-label="Mobile Navigation"
         className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-neu-bg/95 backdrop-blur-md border-t border-black/5 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
       >
-        <div className="max-w-md mx-auto grid grid-cols-5 gap-1">
+        <div className="max-w-md mx-auto grid grid-cols-6 gap-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
