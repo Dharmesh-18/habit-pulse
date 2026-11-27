@@ -2,6 +2,7 @@
 import React from "react";
 import {
   CalendarCheck2,
+  Flame,
   BellRing,
   Snowflake,
   Award,
@@ -11,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { MatrixVisual } from "./slides/MatrixVisual";
+import { ChallengesVisual } from "./slides/ChallengesVisual";
 import { RemindersVisual } from "./slides/RemindersVisual";
 import { StreakFreezeVisual } from "./slides/StreakFreezeVisual";
 import { MilestonesVisual } from "./slides/MilestonesVisual";
@@ -38,6 +40,16 @@ export const TOUR_SLIDES: TourSlideConfig[] = [
     icon: CalendarCheck2,
     accentColor: "text-neu-accent",
     Visual: MatrixVisual,
+  },
+  {
+    id: "streak-challenges",
+    badge: "Challenges Arena",
+    title: "Solo, Duo & Clan Streak Challenges",
+    description:
+      "Commit to strict no-freeze challenges solo, with a buddy, or a 5-member clan. Nudge pending teammates via push & email and conquer the streak to win huge coin jackpots!",
+    icon: Flame,
+    accentColor: "text-orange-500",
+    Visual: ChallengesVisual,
   },
   {
     id: "smart-reminders",
