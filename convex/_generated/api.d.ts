@@ -14,6 +14,7 @@ import type * as auth_index from "../auth/index.js";
 import type * as auth_oauth from "../auth/oauth.js";
 import type * as auth_oauthTypes from "../auth/oauthTypes.js";
 import type * as challenges_index from "../challenges/index.js";
+import type * as challenges_nudges from "../challenges/nudges.js";
 import type * as challenges_rewards from "../challenges/rewards.js";
 import type * as common_auth from "../common/auth.js";
 import type * as common_rateLimiter from "../common/rateLimiter.js";
@@ -51,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   "auth/oauth": typeof auth_oauth;
   "auth/oauthTypes": typeof auth_oauthTypes;
   "challenges/index": typeof challenges_index;
+  "challenges/nudges": typeof challenges_nudges;
   "challenges/rewards": typeof challenges_rewards;
   "common/auth": typeof common_auth;
   "common/rateLimiter": typeof common_rateLimiter;

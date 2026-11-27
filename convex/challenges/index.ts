@@ -11,11 +11,14 @@ import {
   generateInviteCode,
   type ChallengeMode,
 } from "./rewards";
+import { internal } from "../_generated/api";
+import { assertRateLimit } from "../common/rateLimiter";
 
 const ALLOWED_DURATIONS = [7, 14, 21, 30];
 const DAILY_CHECKIN_COINS = 5;
 const DAILY_CHECKIN_XP = 10;
 const INVITE_TTL_MS = 24 * 60 * 60 * 1000;
+const NUDGE_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 
 async function resolveSessionUserId(ctx: any, sessionToken?: string) {
   if (!sessionToken) return null;
@@ -56,6 +59,24 @@ export const listMyChallenges = query({
         let effectiveStatus = challenge.status;
         if (effectiveStatus === "pending" && challenge.expiresAt < now) {
           effectiveStatus = "expired";
+        }
+
+        let nudgeCooldownEndsAt: number | null = null;
+        if (effectiveStatus === "active" && challenge.mode !== "solo") {
+          const rl = await ctx.db
+            .query("rateLimits")
+            .withIndex("by_key", (q) =>
+              q.eq("key", `nudge:${challenge._id}:${userId}`),
+            )
+            .first();
+
+          if (rl && rl.timestamps.length > 0) {
+            const latestTs = Math.max(...rl.timestamps);
+            const expiresAt = latestTs + NUDGE_COOLDOWN_MS;
+            if (expiresAt > now) {
+              nudgeCooldownEndsAt = expiresAt;
+            }
+          }
         }
 
         const participants = await ctx.db
@@ -132,6 +153,7 @@ export const listMyChallenges = query({
           members: memberDetails,
           myCompletedDates,
           allCompletedDates,
+          nudgeCooldownEndsAt,
           myCheckedInToday: todayLogs.some((l) => l.userId === userId),
           allCheckedInToday:
             participants.length > 0 && todayLogs.length >= participants.length,
@@ -645,5 +667,109 @@ export const internalAuditChallenges = internalMutation({
     }
 
     return { expiredCount, failedCount };
+  },
+});
+
+/**
+ * Nudge pending teammates in an active Duo or Clan challenge.
+ * Rate-limited to max 1 nudge burst per 15 minutes per sender per challenge.
+ */
+export const nudgeChallengeMembers = mutation({
+  args: {
+    sessionToken: v.string(),
+    challengeId: v.id("challenges"),
+    todayDate: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const sender = await authenticate(ctx, args.sessionToken);
+    const challenge = await ctx.db.get(args.challengeId);
+
+    if (!challenge) {
+      throw new ConvexError("Challenge not found.");
+    }
+    if (challenge.mode === "solo") {
+      throw new ConvexError("Solo challenges have no teammates to nudge.");
+    }
+    if (challenge.status !== "active" || !challenge.startDate) {
+      throw new ConvexError("You can only nudge members in an active challenge.");
+    }
+
+    const participants = await ctx.db
+      .query("challengeParticipants")
+      .withIndex("by_challenge", (q) => q.eq("challengeId", challenge._id))
+      .collect();
+
+    const isMember = participants.some((p) => p.userId === sender.userId);
+    if (!isMember) {
+      throw new ConvexError("You are not a participant in this challenge.");
+    }
+
+    // Find teammates who have NOT checked in today
+    const todayLogs = await ctx.db
+      .query("challengeLogs")
+      .withIndex("by_challenge_date", (q) =>
+        q.eq("challengeId", challenge._id).eq("date", args.todayDate),
+      )
+      .collect();
+
+    const completedUserIds = new Set(todayLogs.map((l) => l.userId));
+    const pendingParticipants = participants.filter(
+      (p) => p.userId !== sender.userId && !completedUserIds.has(p.userId),
+    );
+
+    if (pendingParticipants.length === 0) {
+      throw new ConvexError("All teammates have already checked in today!");
+    }
+
+    // Enforce 1 nudge per 15 minutes per sender per challenge
+    await assertRateLimit(ctx, {
+      key: `nudge:${challenge._id}:${sender.userId}`,
+      maxRequests: 1,
+      windowMs: NUDGE_COOLDOWN_MS,
+    });
+
+    const recipients: Array<{
+      userId: typeof sender.userId;
+      email: string;
+      name: string;
+    }> = [];
+
+    for (const p of pendingParticipants) {
+      const targetUser = await ctx.db.get(p.userId);
+      if (targetUser?.email) {
+        recipients.push({
+          userId: targetUser._id,
+          email: targetUser.email,
+          name: targetUser.name ?? "Challenger",
+        });
+      }
+    }
+
+    const dayNumber = Math.min(
+      challenge.durationDays,
+      diffDaysInclusive(challenge.startDate, args.todayDate),
+    );
+
+    if (recipients.length > 0) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.challenges.nudges.sendChallengeNudge,
+        {
+          senderName: sender.name ?? "Your teammate",
+          challengeId: challenge._id,
+          challengeTitle: challenge.title,
+          category: challenge.category,
+          mode: challenge.mode,
+          dayNumber,
+          durationDays: challenge.durationDays,
+          recipients,
+        },
+      );
+    }
+
+    return {
+      nudgedCount: recipients.length,
+      cooldownEndsAt: Date.now() + NUDGE_COOLDOWN_MS,
+    };
   },
 });

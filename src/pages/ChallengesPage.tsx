@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   Lock,
   LogOut,
+  BellRing
 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -199,6 +200,14 @@ export const ChallengesPage: React.FC<ChallengesPageProps> = ({
   } | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
+  const [nudgingId, setNudgingId] = useState<string | null>(null);
+  const [nowTs, setNowTs] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNowTs(Date.now()), 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
   const challenges = useQuery(
     api.challenges.index.listMyChallenges,
     sessionToken ? { sessionToken, todayDate } : "skip",
@@ -208,6 +217,8 @@ export const ChallengesPage: React.FC<ChallengesPageProps> = ({
   const dismissMutation = useMutation(
     api.challenges.index.leaveOrCancelChallenge,
   );
+
+  const nudgeMutation = useMutation(api.challenges.index.nudgeChallengeMembers);
 
   const handleCheckIn = async (
     challengeId: Id<"challenges">,
@@ -247,36 +258,59 @@ export const ChallengesPage: React.FC<ChallengesPageProps> = ({
   };
 
   const executeRemoveChallenge = async (challengeId: Id<"challenges">) => {
-  await dismissMutation({ sessionToken, challengeId });
-};
+    await dismissMutation({ sessionToken, challengeId });
+  };
 
-// 1. Direct dismiss for already finished (Completed / Broken / Expired) cards
-const handleDismiss = async (challengeId: Id<"challenges">) => {
-  try {
-    await executeRemoveChallenge(challengeId);
-  } catch (err: unknown) {
-    toast.error(parseConvexError(err));
-  }
-};
+  // 1. Direct dismiss for already finished (Completed / Broken / Expired) cards
+  const handleDismiss = async (challengeId: Id<"challenges">) => {
+    try {
+      await executeRemoveChallenge(challengeId);
+    } catch (err: unknown) {
+      toast.error(parseConvexError(err));
+    }
+  };
 
-// 2. Modal-confirmed quit/cancel for Active or Pending cards
-const handleConfirmLeaveOrCancel = async () => {
-  if (!confirmTarget) return;
-  try {
-    setIsConfirming(true);
-    await executeRemoveChallenge(confirmTarget.challengeId);
-    toast.info(
-      confirmTarget.type === "quit"
-        ? `Left "${confirmTarget.title}"`
-        : `Invite for "${confirmTarget.title}" cancelled`
-    );
-    setConfirmTarget(null);
-  } catch (err: unknown) {
-    toast.error(parseConvexError(err));
-  } finally {
-    setIsConfirming(false);
-  }
-};
+  // 2. Modal-confirmed quit/cancel for Active or Pending cards
+  const handleConfirmLeaveOrCancel = async () => {
+    if (!confirmTarget) return;
+    try {
+      setIsConfirming(true);
+      await executeRemoveChallenge(confirmTarget.challengeId);
+      toast.info(
+        confirmTarget.type === "quit"
+          ? `Left "${confirmTarget.title}"`
+          : `Invite for "${confirmTarget.title}" cancelled`,
+      );
+      setConfirmTarget(null);
+    } catch (err: unknown) {
+      toast.error(parseConvexError(err));
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  const handleNudge = async (
+    challengeId: Id<"challenges">,
+    title: string,
+  ) => {
+    try {
+      setNudgingId(challengeId);
+      const res = await nudgeMutation({
+        sessionToken,
+        challengeId,
+        todayDate,
+      });
+      setNowTs(Date.now());
+      soundFX.checkHabit();
+      toast.success(
+        `🔔 Nudged ${res.nudgedCount} teammate${res.nudgedCount > 1 ? "s" : ""} for "${title}"!`,
+      );
+    } catch (err: unknown) {
+      toast.error(parseConvexError(err));
+    } finally {
+      setNudgingId(null);
+    }
+  };
 
   const filteredChallenges = (challenges ?? []).filter((c) => {
     if (filter === "active") return c.effectiveStatus === "active";
@@ -375,6 +409,19 @@ const handleConfirmLeaveOrCancel = async () => {
             const isCompleted = status === "completed";
             const isFailed = status === "failed" || status === "expired";
 
+            const pendingTeammatesCount = c.members.filter(
+              (m) => !m.checkedInToday,
+            ).length - (c.myCheckedInToday ? 0 : 1);
+
+            const canShowNudge =
+              isActive && c.mode !== "solo" && pendingTeammatesCount > 0;
+
+            const remainingCooldownMs =
+              c.nudgeCooldownEndsAt && c.nudgeCooldownEndsAt > nowTs
+                ? c.nudgeCooldownEndsAt - nowTs
+                : 0;
+            const remainingMins = Math.ceil(remainingCooldownMs / 60_000);
+
             return (
               <NeuCard
                 key={c._id}
@@ -398,9 +445,38 @@ const handleConfirmLeaveOrCancel = async () => {
                       </span>
                     </div>
 
-                    <h3 className="text-base font-extrabold text-neu-dark truncate mt-1">
-                      {c.title}
-                    </h3>
+                    <div className="flex items-center gap-2 mt-1 min-w-0">
+                      <h3 className="text-base font-extrabold text-neu-dark truncate">
+                        {c.title}
+                      </h3>
+
+                      {canShowNudge && (
+                        <button
+                          type="button"
+                          disabled={remainingCooldownMs > 0 || nudgingId === c._id}
+                          onClick={() => handleNudge(c._id, c.title)}
+                          title={
+                            remainingCooldownMs > 0
+                              ? `You can nudge again in ${remainingMins} min`
+                              : "Send a push & email reminder to pending teammates"
+                          }
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold shrink-0 transition-all ${
+                            remainingCooldownMs > 0
+                              ? "bg-neu-bg shadow-neu-pressed-sm text-neu-muted cursor-not-allowed"
+                              : "bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 active:scale-95 cursor-pointer"
+                          }`}
+                        >
+                          <BellRing className="w-2.5 h-2.5" />
+                          <span>
+                            {nudgingId === c._id
+                              ? "Sending..."
+                              : remainingCooldownMs > 0
+                                ? `Nudged • ${remainingMins}m`
+                                : "Nudge"}
+                          </span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right Column: Status Pill + Quit / Dismiss Action */}

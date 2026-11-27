@@ -39,6 +39,8 @@ const DURATIONS = [
 ];
 
 const CATEGORIES = ["Health", "Study", "Work", "Mindfulness", "Fitness"];
+const MIN_CHALLENGE_NAME_LENGTH = 3;
+const MAX_CHALLENGE_NAME_LENGTH = 30;
 
 function getLocalTodayStr(): string {
   const d = new Date();
@@ -91,8 +93,25 @@ export const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
+
+    const currentName = title.trim();
+
+    if (!currentName) {
       toast.error("Please enter a challenge habit title.");
+      return;
+    }
+
+    if (currentName.length < MIN_CHALLENGE_NAME_LENGTH) {
+      toast.error(
+        `Habit name must be at least ${MIN_CHALLENGE_NAME_LENGTH} characters long.`,
+      );
+      return;
+    }
+
+    if (currentName.length > MAX_CHALLENGE_NAME_LENGTH) {
+      toast.error(
+        `Habit name cannot exceed ${MAX_CHALLENGE_NAME_LENGTH} characters.`,
+      );
       return;
     }
 
